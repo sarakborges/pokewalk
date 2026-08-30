@@ -10,8 +10,12 @@ android {
         applicationId = "com.example.pokewalklite"
         minSdk = 28
         targetSdk = 36
-        versionCode = 13
-        versionName = "0.4.9"
+        versionCode = 10000
+        versionName = "1.0.0"
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 }
 

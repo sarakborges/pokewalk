@@ -109,7 +109,7 @@ class WalkService : Service() {
         )
 
         return NotificationCompat.Builder(this, ACTIVE_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setSmallIcon(R.drawable.ic_notification_walk)
             .setContentTitle("PokeWalk Lite")
             .setContentText(text)
             .setContentIntent(openAppPendingIntent())
@@ -134,7 +134,7 @@ class WalkService : Service() {
             metrics.steps
         )
         return NotificationCompat.Builder(this, RESULT_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.checkbox_on_background)
+            .setSmallIcon(R.drawable.ic_notification_walk)
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(openAppPendingIntent())
