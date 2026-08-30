@@ -1,0 +1,64 @@
+name: Build PokeWalk Lite APK
+
+on:
+  push:
+    paths:
+      - "app/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 36 SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle 9.5
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.5.0"
+
+      - name: Build release APK
+        run: gradle --no-daemon :app:assembleRelease
+
+      - name: Copy unsigned APK
+        run: cp app/build/outputs/apk/release/app-release-unsigned.apk PokeWalkLite-unsigned.apk
+
+      - name: Package Android signing tools
+        run: |
+          mkdir -p android-signing-tools/lib android-signing-tools/lib64
+          cp "$ANDROID_HOME/build-tools/36.0.0/apksigner" android-signing-tools/
+          cp "$ANDROID_HOME/build-tools/36.0.0/zipalign" android-signing-tools/
+          cp "$ANDROID_HOME/build-tools/36.0.0/aapt2" android-signing-tools/
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" android-signing-tools/lib/
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib64/libc++.so" android-signing-tools/lib64/
+
+      - name: Upload unsigned APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PokeWalkLite-unsigned-apk
+          path: PokeWalkLite-unsigned.apk
+          if-no-files-found: error
+
+      - name: Upload Android signing tools
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-signing-tools
+          path: android-signing-tools
+          if-no-files-found: error
