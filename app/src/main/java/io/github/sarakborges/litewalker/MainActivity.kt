@@ -62,6 +62,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var stepsValue: TextView
     private lateinit var distanceSeek: SeekBar
     private lateinit var speedSeek: SeekBar
+    private lateinit var endlessSwitch: Switch
     private lateinit var selectedDistanceLabel: TextView
     private lateinit var selectedSpeedLabel: TextView
     private lateinit var estimatedTimeLabel: TextView
@@ -71,6 +72,7 @@ class MainActivity : ComponentActivity() {
 
     private var selectedKm = 5
     private var selectedSpeedKmh = WalkState.DEFAULT_SPEED_KMH
+    private var selectedEndless = false
     private var lastErrorShown: String? = null
     private var lastHistorySignature: String? = null
     private var darkMode = false
@@ -133,6 +135,7 @@ class MainActivity : ComponentActivity() {
 
         selectedKm = WalkState.preferredDistanceKm(this)
         selectedSpeedKmh = WalkState.preferredSpeedKmh(this)
+        selectedEndless = WalkState.preferredEndless(this)
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -334,6 +337,56 @@ class MainActivity : ComponentActivity() {
         card.addView(sectionSubtitle(getString(R.string.configure_subtitle)))
         card.addView(space(20))
 
+        val endlessRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(12), dp(10), dp(12))
+            background = roundedDrawable(palette.accentSoft, 14)
+        }
+        val endlessCopy = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        endlessCopy.addView(TextView(this).apply {
+            text = getString(R.string.endless_mode)
+            textSize = 14f
+            setTextColor(palette.textPrimary)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        })
+        endlessCopy.addView(TextView(this).apply {
+            text = getString(R.string.endless_mode_description)
+            textSize = 12f
+            setTextColor(palette.textMuted)
+            setPadding(0, dp(3), dp(8), 0)
+        })
+        endlessRow.addView(endlessCopy, LinearLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            1f
+        ))
+        endlessSwitch = Switch(this).apply {
+            isChecked = selectedEndless
+            text = ""
+            minWidth = 0
+            minimumWidth = 0
+            contentDescription = getString(R.string.endless_mode_toggle_description)
+            setOnCheckedChangeListener { _, checked ->
+                if (WalkState.isRunning(this@MainActivity)) return@setOnCheckedChangeListener
+                selectedEndless = checked
+                WalkState.setPreferredEndless(this@MainActivity, checked)
+                updateSelectedConfigText()
+            }
+        }
+        endlessRow.addView(endlessSwitch)
+        card.addView(endlessRow, matchWrap())
+
+        card.addView(divider(), LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            dp(1)
+        ).apply {
+            topMargin = dp(18)
+            bottomMargin = dp(18)
+        })
+
         settingHeader(getString(R.string.speed)).also {
             selectedSpeedLabel = it.second
             card.addView(it.first)
@@ -420,6 +473,13 @@ class MainActivity : ComponentActivity() {
         }
         estimateRow.addView(estimatedTimeLabel)
         card.addView(estimateRow, matchWrap().apply { topMargin = dp(18) })
+        card.addView(TextView(this).apply {
+            text = getString(R.string.kilometer_alert_hint)
+            textSize = 12f
+            setTextColor(palette.textMuted)
+            gravity = Gravity.CENTER
+            setPadding(dp(8), dp(11), dp(8), 0)
+        }, matchWrap())
         return card
     }
 
@@ -767,12 +827,25 @@ class MainActivity : ComponentActivity() {
 
     private fun updateSelectedConfigText() {
         selectedSpeedLabel.text = "$selectedSpeedKmh km/h"
-        selectedDistanceLabel.text = "$selectedKm km"
-        estimatedTimeLabel.text = formatEstimatedDuration(
-            WalkState.calculateDurationMs(selectedKm, selectedSpeedKmh)
-        )
+        selectedDistanceLabel.text = if (selectedEndless) {
+            getString(R.string.endless_value)
+        } else {
+            "$selectedKm km"
+        }
+        estimatedTimeLabel.text = if (selectedEndless) {
+            getString(R.string.until_you_stop)
+        } else {
+            formatEstimatedDuration(WalkState.calculateDurationMs(selectedKm, selectedSpeedKmh))
+        }
+        val running = WalkState.isRunning(this)
+        distanceSeek.isEnabled = !running && !selectedEndless
+        distanceSeek.alpha = if (distanceSeek.isEnabled) 1f else 0.45f
         if (!WalkState.isRunning(this)) {
-            actionButton.text = getString(R.string.start_distance, selectedKm)
+            actionButton.text = if (selectedEndless) {
+                getString(R.string.start_endless)
+            } else {
+                getString(R.string.start_distance, selectedKm)
+            }
         }
     }
 
@@ -816,12 +889,23 @@ class MainActivity : ComponentActivity() {
         if (running) {
             selectedKm = WalkState.targetDistanceKm(this)
             selectedSpeedKmh = WalkState.targetSpeedKmh(this)
+            selectedEndless = WalkState.isEndless(this)
             distanceSeek.progress = selectedKm - 1
             speedSeek.progress = selectedSpeedKmh - WalkState.MIN_SPEED_KMH
-            selectedDistanceLabel.text = "$selectedKm km"
+            selectedDistanceLabel.text = if (selectedEndless) {
+                getString(R.string.endless_value)
+            } else {
+                "$selectedKm km"
+            }
             selectedSpeedLabel.text = "$selectedSpeedKmh km/h"
-            estimatedTimeLabel.text = formatEstimatedDuration(WalkState.totalDurationMs(this))
-            activityState.text = getString(R.string.status_in_progress)
+            estimatedTimeLabel.text = if (selectedEndless) {
+                getString(R.string.until_you_stop)
+            } else {
+                formatEstimatedDuration(WalkState.totalDurationMs(this))
+            }
+            activityState.text = getString(
+                if (selectedEndless) R.string.status_endless else R.string.status_in_progress
+            )
             activityState.setTextColor(palette.accentStrong)
             actionButton.text = getString(R.string.cancel_activity)
             actionButton.background = roundedDrawable(palette.danger, 16)
@@ -838,14 +922,23 @@ class MainActivity : ComponentActivity() {
             updateSelectedConfigText()
         }
 
-        distanceSeek.isEnabled = !running
+        distanceSeek.isEnabled = !running && !selectedEndless
+        distanceSeek.alpha = if (distanceSeek.isEnabled) 1f else 0.45f
         speedSeek.isEnabled = !running
+        endlessSwitch.isEnabled = !running
         actionButton.setTextColor(Color.WHITE)
 
-        val totalDuration = WalkState.totalDurationMs(this).coerceAtLeast(1L)
-        activityProgress.progress = (
-            metrics.durationMs.toDouble() / totalDuration.toDouble() * 1_000.0
-        ).toInt().coerceIn(0, 1_000)
+        activityProgress.isIndeterminate = running && selectedEndless
+        if (!activityProgress.isIndeterminate) {
+            activityProgress.progress = if (selectedEndless) {
+                0
+            } else {
+                val totalDuration = WalkState.totalDurationMs(this).coerceAtLeast(1L)
+                (metrics.durationMs.toDouble() / totalDuration.toDouble() * 1_000.0)
+                    .toInt()
+                    .coerceIn(0, 1_000)
+            }
+        }
 
         renderHistory()
 
@@ -938,7 +1031,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startActivityRun() {
-        WalkState.begin(this, selectedKm, selectedSpeedKmh)
+        WalkState.begin(this, selectedKm, selectedSpeedKmh, selectedEndless)
         ContextCompat.startForegroundService(this, Intent(this, WalkService::class.java))
         render()
     }

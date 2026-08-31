@@ -9,10 +9,11 @@ Versão atual: **v1.1.0** (`versionCode 10100`).
 - cabeçalho fixo e interface limpa para escolher velocidade e distância;
 - modos claro e escuro, com seleção persistente;
 - interface completa em português do Brasil e inglês dos Estados Unidos;
+- modo sem limite, que continua até a atividade ser encerrada manualmente;
 - acompanhamento de tempo, distância, passos estimados e progresso;
 - cancelamento com salvamento do progresso já realizado;
 - histórico local das cinco atividades mais recentes, com opção de limpeza;
-- notificações durante e ao concluir a atividade;
+- notificações durante a atividade, a cada quilômetro e ao concluir;
 - versão fixada no rodapé;
 - política de privacidade acessível dentro do app;
 - identidade própria, com a silhueta de um aventureiro caminhando e área segura ampliada no ícone.

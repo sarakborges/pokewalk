@@ -9,6 +9,12 @@
 
     <string name="configure_activity">Configurar atividade</string>
     <string name="configure_subtitle">Ajuste os controles antes de começar.</string>
+    <string name="endless_mode">Modo sem limite</string>
+    <string name="endless_mode_description">Continue até encerrar a atividade.</string>
+    <string name="endless_mode_toggle_description">Ativar ou desativar o modo sem limite</string>
+    <string name="endless_value">Sem limite</string>
+    <string name="until_you_stop">Até você parar</string>
+    <string name="kilometer_alert_hint">Você receberá uma notificação a cada quilômetro em qualquer modo.</string>
     <string name="speed">VELOCIDADE</string>
     <string name="speed_min">1 km/h</string>
     <string name="speed_max">8 km/h</string>
@@ -21,8 +27,10 @@
     <string name="metric_distance">DISTÂNCIA</string>
     <string name="metric_steps">PASSOS</string>
     <string name="start_distance">Iniciar %1$d km</string>
+    <string name="start_endless">Iniciar modo sem limite</string>
     <string name="cancel_activity">Cancelar atividade</string>
     <string name="status_in_progress">Em andamento</string>
+    <string name="status_endless">Modo sem limite</string>
     <string name="status_completed">Concluída</string>
     <string name="status_saved">Progresso salvo</string>
     <string name="status_ready">Pronta para começar</string>
@@ -58,8 +66,15 @@
     <string name="channel_active_description">Contador permanente das atividades do LiteWalker</string>
     <string name="channel_result_name">Resultado das atividades</string>
     <string name="channel_result_description">Notificação quando uma atividade termina</string>
+    <string name="channel_milestone_name">Marcos de quilômetro</string>
+    <string name="channel_milestone_description">Alerta a cada quilômetro percorrido</string>
     <string name="notification_progress">%1$s • %2$s km • %3$s passos • %4$d km/h</string>
     <string name="notification_result">%1$s • %2$s km • %3$s passos</string>
+    <plurals name="notification_kilometer_title">
+        <item quantity="one">%1$d km percorrido</item>
+        <item quantity="other">%1$d km percorridos</item>
+    </plurals>
+    <string name="notification_kilometer_body">%1$s • %2$s passos</string>
     <string name="notification_completed">Atividade concluída</string>
     <string name="notification_saved">Progresso salvo</string>
 </resources>

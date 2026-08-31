@@ -67,6 +67,16 @@ class WalkService : Service() {
                     description = getString(R.string.channel_result_description)
                 }
             )
+            manager.createNotificationChannel(
+                NotificationChannel(
+                    MILESTONE_CHANNEL_ID,
+                    getString(R.string.channel_milestone_name),
+                    NotificationManager.IMPORTANCE_DEFAULT
+                ).apply {
+                    description = getString(R.string.channel_milestone_description)
+                    setShowBadge(true)
+                }
+            )
         }
     }
 
@@ -90,21 +100,25 @@ class WalkService : Service() {
         notificationTicker?.cancel()
         notificationTicker = scope.launch {
             while (isActive && WalkState.isRunning(this@WalkService)) {
+                val metrics = WalkState.metricsAt(
+                    this@WalkService,
+                    elapsedAt(startMillis)
+                )
                 getSystemService(NotificationManager::class.java).notify(
                     ACTIVE_NOTIFICATION_ID,
                     liveNotification(startMillis)
                 )
+                notifyKilometerMilestone(metrics)
                 delay(1_000L)
             }
         }
     }
 
     private fun liveNotification(startMillis: Long): android.app.Notification {
+        val endless = WalkState.isEndless(this)
         val totalMs = WalkState.totalDurationMs(this).coerceAtLeast(1L)
-        val elapsedMs = (System.currentTimeMillis() - startMillis).coerceIn(0L, totalMs)
+        val elapsedMs = elapsedAt(startMillis)
         val metrics = WalkState.metricsAt(this, elapsedMs)
-        val elapsedSeconds = (elapsedMs / 1_000L).toInt()
-        val totalSeconds = (totalMs / 1_000L).toInt().coerceAtLeast(1)
         val text = getString(
             R.string.notification_progress,
             formatDuration(metrics.durationMs),
@@ -113,7 +127,7 @@ class WalkService : Service() {
             WalkState.targetSpeedKmh(this)
         )
 
-        return NotificationCompat.Builder(this, ACTIVE_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, ACTIVE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_walk)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
@@ -125,10 +139,69 @@ class WalkService : Service() {
             .setSilent(true)
             .setOngoing(true)
             .setAutoCancel(false)
-            .setProgress(totalSeconds, elapsedSeconds.coerceIn(0, totalSeconds), false)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .build()
+
+        if (endless) {
+            builder.setProgress(0, 0, true)
+        } else {
+            val elapsedSeconds = (elapsedMs / 1_000L).toInt()
+            val totalSeconds = (totalMs / 1_000L).toInt().coerceAtLeast(1)
+            builder.setProgress(
+                totalSeconds,
+                elapsedSeconds.coerceIn(0, totalSeconds),
+                false
+            )
+        }
+        return builder.build()
     }
+
+    private fun elapsedAt(startMillis: Long): Long {
+        val elapsed = (System.currentTimeMillis() - startMillis).coerceAtLeast(0L)
+        return if (WalkState.isEndless(this)) {
+            elapsed
+        } else {
+            elapsed.coerceAtMost(WalkState.totalDurationMs(this))
+        }
+    }
+
+    private fun notifyKilometerMilestone(metrics: WalkState.Metrics) {
+        val completedKilometers = (metrics.distanceMeters / 1_000.0)
+            .toInt()
+            .coerceAtLeast(0)
+        if (completedKilometers <= WalkState.notifiedKilometers(this)) return
+
+        getSystemService(NotificationManager::class.java).notify(
+            MILESTONE_NOTIFICATION_ID,
+            milestoneNotification(completedKilometers, metrics)
+        )
+        WalkState.markKilometersNotified(this, completedKilometers)
+    }
+
+    private fun milestoneNotification(
+        completedKilometers: Int,
+        metrics: WalkState.Metrics
+    ): android.app.Notification = NotificationCompat.Builder(this, MILESTONE_CHANNEL_ID)
+        .setSmallIcon(R.drawable.ic_notification_walk)
+        .setContentTitle(
+            resources.getQuantityString(
+                R.plurals.notification_kilometer_title,
+                completedKilometers,
+                completedKilometers
+            )
+        )
+        .setContentText(
+            getString(
+                R.string.notification_kilometer_body,
+                formatDuration(metrics.durationMs),
+                formatSteps(metrics.steps)
+            )
+        )
+        .setContentIntent(openAppPendingIntent())
+        .setCategory(NotificationCompat.CATEGORY_STATUS)
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        .setAutoCancel(true)
+        .build()
 
     private fun resultNotification(title: String, metrics: WalkState.Metrics): android.app.Notification {
         val text = getString(
@@ -188,37 +261,29 @@ class WalkService : Service() {
 
         // Use a fresh identifier to keep each activity's Health Connect records distinct.
         val sessionId = UUID.randomUUID().toString()
-        val chunks = WalkState.chunkCount(this)
         var resultTitle: String? = null
         var resultMetrics: WalkState.Metrics? = null
 
         try {
             val first = WalkState.completedChunks(this)
-            for (index in first until chunks) {
-                val intervalStart = Instant.ofEpochMilli(
-                    startMillis + WalkState.chunkStartOffsetMs(index)
-                )
-                val intervalEnd = Instant.ofEpochMilli(
-                    startMillis + WalkState.chunkEndOffsetMs(this, index)
-                )
-                val waitMs = intervalEnd.toEpochMilli() - System.currentTimeMillis()
-                if (waitMs > 0L) delay(waitMs)
+            if (WalkState.isEndless(this)) {
+                var index = first
+                while (true) {
+                    writeScheduledChunk(client, sessionId, startMillis, index)
+                    index += 1
+                }
+            } else {
+                for (index in first until WalkState.chunkCount(this)) {
+                    writeScheduledChunk(client, sessionId, startMillis, index)
+                }
 
-                writeChunk(
-                    client = client,
-                    sessionId = sessionId,
-                    index = index,
-                    intervalStart = intervalStart,
-                    intervalEnd = intervalEnd,
-                    meters = WalkState.distanceForChunk(this, index),
-                    steps = WalkState.stepsForChunk(this, index).toLong()
+                notifyKilometerMilestone(
+                    WalkState.metricsAt(this, WalkState.totalDurationMs(this))
                 )
-                WalkState.markChunkWritten(this, index + 1)
+                WalkState.finish(this)
+                resultTitle = getString(R.string.notification_completed)
+                resultMetrics = WalkState.finalMetrics(this)
             }
-
-            WalkState.finish(this)
-            resultTitle = getString(R.string.notification_completed)
-            resultMetrics = WalkState.finalMetrics(this)
         } catch (cancelled: CancellationException) {
             if (!stopRequested) throw cancelled
         } catch (t: Throwable) {
@@ -241,6 +306,33 @@ class WalkService : Service() {
             }
             stopSelf()
         }
+    }
+
+    private suspend fun writeScheduledChunk(
+        client: HealthConnectClient,
+        sessionId: String,
+        startMillis: Long,
+        index: Int
+    ) {
+        val intervalStart = Instant.ofEpochMilli(
+            startMillis + WalkState.chunkStartOffsetMs(index)
+        )
+        val intervalEnd = Instant.ofEpochMilli(
+            startMillis + WalkState.chunkEndOffsetMs(this, index)
+        )
+        val waitMs = intervalEnd.toEpochMilli() - System.currentTimeMillis()
+        if (waitMs > 0L) delay(waitMs)
+
+        writeChunk(
+            client = client,
+            sessionId = sessionId,
+            index = index,
+            intervalStart = intervalStart,
+            intervalEnd = intervalEnd,
+            meters = WalkState.distanceForChunk(this, index),
+            steps = WalkState.stepsForChunk(this, index).toLong()
+        )
+        WalkState.markChunkWritten(this, index + 1)
     }
 
     private suspend fun finalizeStoppedWalk(
@@ -304,6 +396,7 @@ class WalkService : Service() {
         }
 
         val metrics = WalkState.metricsAt(this, durationMs)
+        notifyKilometerMilestone(metrics)
         WalkState.stop(this, metrics.durationMs, metrics.distanceMeters, metrics.steps)
         return metrics
     }
@@ -384,7 +477,9 @@ class WalkService : Service() {
         const val ACTION_STOP = "io.github.sarakborges.litewalker.STOP_WALK"
         private const val ACTIVE_CHANNEL_ID = "litewalker_active_v1"
         private const val RESULT_CHANNEL_ID = "litewalker_results_v1"
+        private const val MILESTONE_CHANNEL_ID = "litewalker_milestones_v1"
         private const val ACTIVE_NOTIFICATION_ID = 5001
         private const val RESULT_NOTIFICATION_ID = 5002
+        private const val MILESTONE_NOTIFICATION_ID = 5003
     }
 }

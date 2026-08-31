@@ -13,6 +13,7 @@ object WalkState {
     const val DEFAULT_SPEED_KMH = 7
 
     private const val BASE_STEPS_PER_KM = 1304.0
+    private const val ENDLESS_STEP_PLAN_MINUTES = 60
     private const val PREFS = "litewalker_state"
     private const val KEY_RUNNING = "running"
     private const val KEY_START_TIME = "start_time"
@@ -22,12 +23,15 @@ object WalkState {
     private const val KEY_ERROR = "error"
     private const val KEY_TARGET_KM = "target_km"
     private const val KEY_PREFERRED_KM = "preferred_km"
+    private const val KEY_ENDLESS = "endless"
+    private const val KEY_PREFERRED_ENDLESS = "preferred_endless"
     private const val KEY_TARGET_SPEED = "target_speed_kmh"
     private const val KEY_PREFERRED_SPEED = "preferred_speed_kmh"
     private const val KEY_STEP_PLAN = "step_plan"
     private const val KEY_FINAL_DURATION = "final_duration"
     private const val KEY_FINAL_DISTANCE = "final_distance"
     private const val KEY_FINAL_STEPS = "final_steps"
+    private const val KEY_NOTIFIED_KM = "notified_km"
     private const val KEY_RUN_HISTORY = "run_history"
     private const val MAX_RUN_HISTORY = 5
 
@@ -49,15 +53,21 @@ object WalkState {
         context: Context,
         distanceKm: Int,
         speedKmh: Int = preferredSpeedKmh(context),
+        endless: Boolean = preferredEndless(context),
         startTimeMillis: Long = System.currentTimeMillis()
     ) {
         val safeDistance = distanceKm.coerceIn(1, 20)
         val safeSpeed = speedKmh.coerceIn(MIN_SPEED_KMH, MAX_SPEED_KMH)
         val durationMs = calculateDurationMs(safeDistance, safeSpeed)
+        val planChunks = if (endless) {
+            ENDLESS_STEP_PLAN_MINUTES
+        } else {
+            calculateChunkCount(durationMs)
+        }
         val stepPlan = buildStepPlan(
             safeSpeed,
-            durationMs,
-            calculateChunkCount(durationMs)
+            if (endless) planChunks * 60_000L else durationMs,
+            planChunks
         )
 
         prefs(context).edit()
@@ -68,12 +78,15 @@ object WalkState {
             .putBoolean(KEY_STOPPED, false)
             .putInt(KEY_TARGET_KM, safeDistance)
             .putInt(KEY_PREFERRED_KM, safeDistance)
+            .putBoolean(KEY_ENDLESS, endless)
+            .putBoolean(KEY_PREFERRED_ENDLESS, endless)
             .putInt(KEY_TARGET_SPEED, safeSpeed)
             .putInt(KEY_PREFERRED_SPEED, safeSpeed)
             .putString(KEY_STEP_PLAN, stepPlan.joinToString(","))
             .putLong(KEY_FINAL_DURATION, 0L)
             .putString(KEY_FINAL_DISTANCE, "0")
             .putLong(KEY_FINAL_STEPS, 0L)
+            .putInt(KEY_NOTIFIED_KM, 0)
             .remove(KEY_ERROR)
             .apply()
     }
@@ -86,7 +99,13 @@ object WalkState {
         }
 
         val now = System.currentTimeMillis()
-        begin(context, preferredDistanceKm(context), preferredSpeedKmh(context), now)
+        begin(
+            context,
+            preferredDistanceKm(context),
+            preferredSpeedKmh(context),
+            preferredEndless(context),
+            now
+        )
         return now
     }
 
@@ -105,6 +124,10 @@ object WalkState {
         prefs(context).edit().putInt(KEY_PREFERRED_KM, km.coerceIn(1, 20)).apply()
     }
 
+    fun setPreferredEndless(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_PREFERRED_ENDLESS, enabled).apply()
+    }
+
     fun setPreferredSpeedKmh(context: Context, speedKmh: Int) {
         prefs(context).edit()
             .putInt(KEY_PREFERRED_SPEED, speedKmh.coerceIn(MIN_SPEED_KMH, MAX_SPEED_KMH))
@@ -113,6 +136,12 @@ object WalkState {
 
     fun preferredDistanceKm(context: Context): Int =
         prefs(context).getInt(KEY_PREFERRED_KM, 5).coerceIn(1, 20)
+
+    fun preferredEndless(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_PREFERRED_ENDLESS, false)
+
+    fun isEndless(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ENDLESS, false)
 
     fun targetDistanceKm(context: Context): Int =
         prefs(context)
@@ -140,26 +169,42 @@ object WalkState {
     private fun calculateChunkCount(durationMs: Long): Int =
         ceil(durationMs / 60_000.0).toInt().coerceAtLeast(1)
 
-    fun totalDurationMs(context: Context): Long =
+    fun totalDurationMs(context: Context): Long = if (isEndless(context)) {
+        Long.MAX_VALUE
+    } else {
         calculateDurationMs(targetDistanceKm(context), targetSpeedKmh(context))
+    }
 
-    fun chunkCount(context: Context): Int = calculateChunkCount(totalDurationMs(context))
+    fun chunkCount(context: Context): Int = if (isEndless(context)) {
+        Int.MAX_VALUE
+    } else {
+        calculateChunkCount(totalDurationMs(context))
+    }
 
     private fun chunkDurationMs(totalDurationMs: Long, chunks: Int, index: Int): Long {
         if (index !in 0 until chunks) return 0L
         return (totalDurationMs - index * 60_000L).coerceIn(0L, 60_000L)
     }
 
-    fun chunkDurationMs(context: Context, index: Int): Long =
+    fun chunkDurationMs(context: Context, index: Int): Long = if (isEndless(context)) {
+        if (index >= 0) 60_000L else 0L
+    } else {
         chunkDurationMs(totalDurationMs(context), chunkCount(context), index)
+    }
 
     fun chunkStartOffsetMs(index: Int): Long = index.coerceAtLeast(0) * 60_000L
 
-    fun chunkEndOffsetMs(context: Context, index: Int): Long =
-        (chunkStartOffsetMs(index) + chunkDurationMs(context, index))
-            .coerceAtMost(totalDurationMs(context))
+    fun chunkEndOffsetMs(context: Context, index: Int): Long {
+        val end = chunkStartOffsetMs(index) + chunkDurationMs(context, index)
+        return if (isEndless(context)) end else end.coerceAtMost(totalDurationMs(context))
+    }
 
     fun fullChunksElapsed(context: Context, elapsedMs: Long): Int {
+        if (isEndless(context)) {
+            return (elapsedMs.coerceAtLeast(0L) / 60_000L)
+                .coerceAtMost(Int.MAX_VALUE.toLong())
+                .toInt()
+        }
         val safeElapsed = elapsedMs.coerceIn(0L, totalDurationMs(context))
         if (safeElapsed >= totalDurationMs(context)) return chunkCount(context)
         return (safeElapsed / 60_000L).toInt().coerceIn(0, chunkCount(context))
@@ -173,6 +218,7 @@ object WalkState {
         if (durationMs <= 0L) return 0.0
 
         val calculated = metersPerMinute(context) * durationMs / 60_000.0
+        if (isEndless(context)) return calculated
         if (index != chunkCount(context) - 1) return calculated
 
         val priorDistance = (0 until index).sumOf { priorIndex ->
@@ -182,43 +228,72 @@ object WalkState {
     }
 
     fun stepPlan(context: Context): List<Int> {
-        val chunks = chunkCount(context)
+        val chunks = if (isEndless(context)) ENDLESS_STEP_PLAN_MINUTES else chunkCount(context)
         val stored = prefs(context).getString(KEY_STEP_PLAN, "").orEmpty()
             .split(',')
             .mapNotNull(String::toIntOrNull)
         return if (stored.size == chunks) {
             stored
         } else {
-            buildStepPlan(targetSpeedKmh(context), totalDurationMs(context), chunks)
+            buildStepPlan(
+                targetSpeedKmh(context),
+                if (isEndless(context)) chunks * 60_000L else totalDurationMs(context),
+                chunks
+            )
         }
     }
 
-    fun stepsForChunk(context: Context, index: Int): Int =
-        stepPlan(context).getOrElse(index) { 0 }
+    fun stepsForChunk(context: Context, index: Int): Int {
+        val plan = stepPlan(context)
+        if (plan.isEmpty() || index < 0) return 0
+        return if (isEndless(context)) {
+            plan[index % plan.size]
+        } else {
+            plan.getOrElse(index) { 0 }
+        }
+    }
 
     fun metricsAt(context: Context, elapsedMs: Long): Metrics {
         val totalDuration = totalDurationMs(context)
-        val safeElapsed = elapsedMs.coerceIn(0L, totalDuration)
+        val endless = isEndless(context)
+        val safeElapsed = if (endless) elapsedMs.coerceAtLeast(0L) else {
+            elapsedMs.coerceIn(0L, totalDuration)
+        }
         val chunks = chunkCount(context)
         val plan = stepPlan(context)
         val fullChunks = fullChunksElapsed(context, safeElapsed)
 
-        var distance = (0 until fullChunks).sumOf { distanceForChunk(context, it) }
-        var steps = plan.take(fullChunks).sumOf { it.toLong() }
+        var distance = if (endless) {
+            fullChunks.toDouble() * metersPerMinute(context)
+        } else {
+            (0 until fullChunks).sumOf { distanceForChunk(context, it) }
+        }
+        var steps = if (endless && plan.isNotEmpty()) {
+            val completePlans = fullChunks / plan.size
+            val remainingChunks = fullChunks % plan.size
+            completePlans.toLong() * plan.sumOf { it.toLong() } +
+                plan.take(remainingChunks).sumOf { it.toLong() }
+        } else {
+            plan.take(fullChunks).sumOf { it.toLong() }
+        }
 
-        if (fullChunks < chunks && safeElapsed < totalDuration) {
+        if (fullChunks < chunks && (endless || safeElapsed < totalDuration)) {
             val elapsedInChunk = (safeElapsed - chunkStartOffsetMs(fullChunks)).coerceAtLeast(0L)
             val fraction = (
                 elapsedInChunk.toDouble() /
                     chunkDurationMs(context, fullChunks).coerceAtLeast(1L).toDouble()
                 ).coerceIn(0.0, 1.0)
             distance += distanceForChunk(context, fullChunks) * fraction
-            steps += (plan.getOrElse(fullChunks) { 0 } * fraction).roundToLong()
+            steps += (stepsForChunk(context, fullChunks) * fraction).roundToLong()
         }
 
         return Metrics(
             durationMs = safeElapsed,
-            distanceMeters = distance.coerceIn(0.0, targetDistanceMeters(context)),
+            distanceMeters = if (endless) {
+                distance.coerceAtLeast(0.0)
+            } else {
+                distance.coerceIn(0.0, targetDistanceMeters(context))
+            },
             steps = steps.coerceAtLeast(0L)
         )
     }
@@ -230,6 +305,7 @@ object WalkState {
     }
 
     fun finish(context: Context) {
+        if (isEndless(context)) return
         saveResult(
             context = context,
             durationMs = totalDurationMs(context),
@@ -241,10 +317,19 @@ object WalkState {
     }
 
     fun stop(context: Context, durationMs: Long, distanceMeters: Double, steps: Long) {
+        val endless = isEndless(context)
         saveResult(
             context = context,
-            durationMs = durationMs.coerceIn(0L, totalDurationMs(context)),
-            distanceMeters = distanceMeters.coerceIn(0.0, targetDistanceMeters(context)),
+            durationMs = if (endless) {
+                durationMs.coerceAtLeast(0L)
+            } else {
+                durationMs.coerceIn(0L, totalDurationMs(context))
+            },
+            distanceMeters = if (endless) {
+                distanceMeters.coerceAtLeast(0.0)
+            } else {
+                distanceMeters.coerceIn(0.0, targetDistanceMeters(context))
+            },
             steps = steps.coerceAtLeast(0L),
             finished = false,
             stopped = true
@@ -341,6 +426,13 @@ object WalkState {
 
     fun startTimeMillis(context: Context): Long =
         prefs(context).getLong(KEY_START_TIME, 0L)
+
+    fun notifiedKilometers(context: Context): Int =
+        prefs(context).getInt(KEY_NOTIFIED_KM, 0).coerceAtLeast(0)
+
+    fun markKilometersNotified(context: Context, kilometers: Int) {
+        prefs(context).edit().putInt(KEY_NOTIFIED_KM, kilometers.coerceAtLeast(0)).apply()
+    }
 
     fun completedChunks(context: Context): Int =
         prefs(context).getInt(KEY_COMPLETED_CHUNKS, 0).coerceIn(0, chunkCount(context))
