@@ -1,5 +1,5 @@
 <resources>
-    <color name="app_background">#F5F7FB</color>
-    <color name="accent_red">#E5383B</color>
-    <color name="launcher_background">#EAF0F8</color>
+    <color name="app_background">#F4F7F6</color>
+    <color name="accent_teal">#1F7A6E</color>
+    <color name="launcher_background">#DCEEEA</color>
 </resources>

@@ -1,12 +1,14 @@
-package com.example.pokewalklite
+package io.github.sarakborges.litewalker
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
@@ -156,15 +158,35 @@ class MainActivity : ComponentActivity() {
         content.addView(space(14))
         content.addView(createActivityCard())
 
-        val footer = TextView(this).apply {
-            text = "PokeWalk Lite  •  v${BuildConfig.VERSION_NAME}"
-            textSize = 11f
-            setTextColor(TEXT_MUTED)
-            gravity = Gravity.CENTER
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
             setBackgroundColor(Color.WHITE)
             elevation = dp(6).toFloat()
         }
+        footer.addView(TextView(this).apply {
+            text = "LiteWalker  •  v${BuildConfig.VERSION_NAME}"
+            textSize = 11f
+            setTextColor(TEXT_MUTED)
+        }, LinearLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            1f
+        ))
+        footer.addView(TextView(this).apply {
+            text = "Privacidade"
+            textSize = 12f
+            setTextColor(ACCENT_DARK)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(6), dp(12), dp(6))
+            background = roundedDrawable(ACCENT_SOFT, 999)
+            isClickable = true
+            isFocusable = true
+            contentDescription = "Abrir política de privacidade"
+            setOnClickListener { showPrivacyPolicy() }
+        })
         root.addView(
             footer,
             LinearLayout.LayoutParams(
@@ -205,7 +227,7 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
         }
         copy.addView(TextView(this).apply {
-            text = "PokeWalk Lite"
+            text = "LiteWalker"
             textSize = 28f
             setTextColor(TEXT_PRIMARY)
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
@@ -679,7 +701,7 @@ class MainActivity : ComponentActivity() {
         ) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         } else if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-            showMessage("Ative as notificações do PokeWalk nas configurações do Android.")
+            showMessage("Ative as notificações do LiteWalker nas configurações do Android.")
         } else {
             ensureActivityPermissionAndStart()
         }
@@ -712,6 +734,17 @@ class MainActivity : ComponentActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
+    private fun showPrivacyPolicy() {
+        AlertDialog.Builder(this)
+            .setTitle("Privacidade")
+            .setMessage(PRIVACY_POLICY_TEXT)
+            .setNeutralButton("Ver online") { _, _ ->
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+            }
+            .setPositiveButton("Fechar", null)
+            .show()
+    }
+
     override fun onDestroy() {
         ticker?.cancel()
         scope.cancel()
@@ -719,20 +752,29 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        private val BACKGROUND = Color.rgb(245, 247, 251)
+        private const val PRIVACY_POLICY_URL =
+            "https://sarakborges.github.io/pokewalk/privacy.html"
+        private const val PRIVACY_POLICY_TEXT =
+            "O LiteWalker não cria conta, não exibe anúncios e não vende nem compartilha dados. " +
+                "Com sua autorização, o app grava estimativas de passos e distância no Health Connect. " +
+                "As preferências e o andamento da atividade ficam somente neste aparelho; os registros " +
+                "de saúde ficam sob o controle do Health Connect. Você pode revogar as permissões ou " +
+                "apagar os registros a qualquer momento nas configurações do Health Connect. Consulte " +
+                "a política completa em $PRIVACY_POLICY_URL."
+
+        private val BACKGROUND = Color.rgb(244, 247, 246)
         private val CARD = Color.WHITE
         private val CARD_BORDER = Color.rgb(230, 234, 241)
         private val TEXT_PRIMARY = Color.rgb(28, 34, 48)
         private val TEXT_MUTED = Color.rgb(103, 112, 130)
-        private val ACCENT = Color.rgb(229, 56, 59)
-        private val ACCENT_DARK = Color.rgb(174, 35, 39)
-        private val ACCENT_SOFT = Color.rgb(255, 238, 238)
-        private val ICON_BACKGROUND = Color.rgb(234, 240, 248)
+        private val ACCENT = Color.rgb(31, 122, 110)
+        private val ACCENT_DARK = Color.rgb(19, 91, 82)
+        private val ACCENT_SOFT = Color.rgb(231, 244, 241)
+        private val ICON_BACKGROUND = Color.rgb(220, 238, 234)
         private val METRIC_BACKGROUND = Color.rgb(247, 249, 252)
         private val PROGRESS_TRACK = Color.rgb(229, 233, 240)
         private val DIVIDER = Color.rgb(235, 238, 243)
-        private val DANGER = Color.rgb(188, 43, 47)
+        private val DANGER = Color.rgb(188, 64, 64)
         private val SUCCESS = Color.rgb(35, 132, 81)
     }
 }
-

@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pokewalklite"
+    namespace = "io.github.sarakborges.litewalker"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.pokewalklite"
+        applicationId = "io.github.sarakborges.litewalker"
         minSdk = 28
         targetSdk = 36
         versionCode = 10000

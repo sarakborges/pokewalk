@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PokeWalkLite"
+rootProject.name = "LiteWalker"
 include(":app")

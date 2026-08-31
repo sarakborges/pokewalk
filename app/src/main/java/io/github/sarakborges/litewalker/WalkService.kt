@@ -1,4 +1,4 @@
-package com.example.pokewalklite
+package io.github.sarakborges.litewalker
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -48,7 +48,7 @@ class WalkService : Service() {
                     "Atividade em andamento",
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "Contador permanente das atividades do PokeWalk"
+                    description = "Contador permanente das atividades do LiteWalker"
                     setShowBadge(false)
                 }
             )
@@ -110,7 +110,7 @@ class WalkService : Service() {
 
         return NotificationCompat.Builder(this, ACTIVE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_walk)
-            .setContentTitle("PokeWalk Lite")
+            .setContentTitle("LiteWalker")
             .setContentText(text)
             .setContentIntent(openAppPendingIntent())
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
@@ -172,7 +172,7 @@ class WalkService : Service() {
     private suspend fun runWalk(startMillis: Long) {
         val client = HealthConnectClient.getOrCreate(this)
 
-        // Exact v0.4.4 behavior: every service run gets a fresh random UUID.
+        // Use a fresh identifier to keep each activity's Health Connect records distinct.
         val sessionId = UUID.randomUUID().toString()
         val chunks = WalkState.chunkCount(this)
         var resultTitle: String? = null
@@ -240,7 +240,7 @@ class WalkService : Service() {
         val elapsedFullChunks = WalkState.fullChunksElapsed(this, durationMs)
         var completed = WalkState.completedChunks(this).coerceIn(0, chunks)
 
-        // Same 0.4.4 reconciliation idea: write any complete minute that elapsed.
+        // Reconcile any complete minute that elapsed before the stop request.
         for (index in completed until elapsedFullChunks) {
             val intervalStart = Instant.ofEpochMilli(
                 startMillis + WalkState.chunkStartOffsetMs(index)
@@ -261,7 +261,7 @@ class WalkService : Service() {
             completed = index + 1
         }
 
-        // Persist the fraction of the current minute on cancel, as in v0.4.4.
+        // Persist the elapsed fraction of the current minute when the user stops early.
         if (durationMs < totalDuration && elapsedFullChunks < chunks) {
             val partialIndex = elapsedFullChunks
             val chunkStartOffset = WalkState.chunkStartOffsetMs(partialIndex)
@@ -307,7 +307,7 @@ class WalkService : Service() {
         val device = Device(type = Device.TYPE_PHONE)
         val zone = ZoneId.systemDefault()
 
-        // Keep the exact v0.4.4 write order: Distance first, Steps second.
+        // Distance and estimated steps are written for the same user-started interval.
         if (meters > 0.0) {
             client.insertRecords(
                 listOf(
@@ -367,9 +367,9 @@ class WalkService : Service() {
     }
 
     companion object {
-        const val ACTION_STOP = "com.example.pokewalklite.STOP_WALK"
-        private const val ACTIVE_CHANNEL_ID = "pokewalk_active_v4"
-        private const val RESULT_CHANNEL_ID = "pokewalk_results_v4"
+        const val ACTION_STOP = "io.github.sarakborges.litewalker.STOP_WALK"
+        private const val ACTIVE_CHANNEL_ID = "litewalker_active_v1"
+        private const val RESULT_CHANNEL_ID = "litewalker_results_v1"
         private const val ACTIVE_NOTIFICATION_ID = 5001
         private const val RESULT_NOTIFICATION_ID = 5002
     }

@@ -1,22 +1,18 @@
-# PokeWalk Lite
+# LiteWalker
 
-Aplicativo Android pessoal para registrar atividades de caminhada no Health Connect.
+Aplicativo Android para acompanhar caminhadas planejadas e registrar estimativas de passos e distância no Health Connect.
 
 Versão atual: **v1.0.0** (`versionCode 10000`).
 
-## Destaques da v1.0.0
+## Destaques
 
-- interface redesenhada, mais limpa e organizada;
-- seleção de velocidade entre 1 e 8 km/h;
-- seleção de distância entre 1 e 20 km;
-- acompanhamento de tempo, distância, passos e progresso;
-- cancelamento com salvamento do progresso já percorrido;
+- interface limpa para escolher velocidade e distância;
+- acompanhamento de tempo, distância, passos estimados e progresso;
+- cancelamento com salvamento do progresso já realizado;
 - notificações durante e ao concluir a atividade;
-- histórico e controles de diagnóstico removidos;
 - versão fixada no rodapé;
-- novo ícone com uma pessoa caminhando lateralmente sobre uma Pokébola.
-
-O gravador do Health Connect mantém o comportamento validado na v0.4.9: somente `DistanceRecord` e `StepsRecord`, escritos em blocos de um minuto com `Metadata.activelyRecorded(Device.TYPE_PHONE)`.
+- política de privacidade acessível dentro do app;
+- identidade própria, com a silhueta de um aventureiro caminhando.
 
 ## Requisitos
 
@@ -39,4 +35,7 @@ APKs distribuídos devem ser assinados com o certificado estável documentado em
 - Android min SDK: 28
 - Android target/compile SDK: 36
 - Health Connect: `androidx.health.connect:connect-client:1.1.0`
-- Package: `com.example.pokewalklite`
+- Package: `io.github.sarakborges.litewalker`
+- Política de privacidade: [`docs/privacy.html`](docs/privacy.html)
+
+O package novo faz do LiteWalker um aplicativo separado das versões pessoais anteriores do PokeWalk.
