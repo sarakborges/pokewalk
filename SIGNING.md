@@ -1,4 +1,4 @@
-# PokeWalk Lite signing
+# LiteWalker signing
 
 Distributed APKs must use one stable signing certificate so Android can install newer versions over older ones.
 
@@ -8,7 +8,7 @@ Expected certificate SHA-256 fingerprint:
 
 The private keystore must never be committed to this public repository.
 
-The GitHub Actions workflow builds a release APK without an ephemeral debug key and uploads `PokeWalkLite-unsigned.apk` for signing outside GitHub.
+The GitHub Actions workflow builds a release APK without an ephemeral debug key and uploads `LiteWalker-v1.0.0-unsigned.apk` for signing outside GitHub.
 
 Before distributing any APK, verify that its signer certificate SHA-256 fingerprint matches the value above. Never distribute the unsigned or runner-debug-signed artifact as the installable app.
 

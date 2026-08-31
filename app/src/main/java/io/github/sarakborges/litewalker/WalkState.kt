@@ -1,4 +1,4 @@
-package com.example.pokewalklite
+package io.github.sarakborges.litewalker
 
 import android.content.Context
 import kotlin.math.ceil
@@ -13,7 +13,7 @@ object WalkState {
     const val DEFAULT_SPEED_KMH = 7
 
     private const val BASE_STEPS_PER_KM = 1304.0
-    private const val PREFS = "pokewalk_state"
+    private const val PREFS = "litewalker_state"
     private const val KEY_RUNNING = "running"
     private const val KEY_START_TIME = "start_time"
     private const val KEY_COMPLETED_CHUNKS = "completed_chunks"
@@ -298,4 +298,3 @@ object WalkState {
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 }
-
