@@ -28,11 +28,21 @@ object WalkState {
     private const val KEY_FINAL_DURATION = "final_duration"
     private const val KEY_FINAL_DISTANCE = "final_distance"
     private const val KEY_FINAL_STEPS = "final_steps"
+    private const val KEY_RUN_HISTORY = "run_history"
+    private const val MAX_RUN_HISTORY = 5
 
     data class Metrics(
         val durationMs: Long,
         val distanceMeters: Double,
         val steps: Long
+    )
+
+    data class RunEntry(
+        val timestampMillis: Long,
+        val durationMs: Long,
+        val distanceMeters: Double,
+        val steps: Long,
+        val completed: Boolean
     )
 
     fun begin(
@@ -258,6 +268,56 @@ object WalkState {
             .putLong(KEY_FINAL_STEPS, steps)
             .remove(KEY_ERROR)
             .apply()
+
+        if (durationMs > 0L || distanceMeters > 0.0 || steps > 0L) {
+            addRunToHistory(
+                context,
+                RunEntry(
+                    timestampMillis = System.currentTimeMillis(),
+                    durationMs = durationMs,
+                    distanceMeters = distanceMeters,
+                    steps = steps,
+                    completed = finished
+                )
+            )
+        }
+    }
+
+    fun recentRuns(context: Context): List<RunEntry> =
+        prefs(context).getString(KEY_RUN_HISTORY, "").orEmpty()
+            .split(';')
+            .mapNotNull(::decodeRun)
+            .take(MAX_RUN_HISTORY)
+
+    fun clearRunHistory(context: Context) {
+        prefs(context).edit().remove(KEY_RUN_HISTORY).apply()
+    }
+
+    private fun addRunToHistory(context: Context, run: RunEntry) {
+        val updated = (listOf(run) + recentRuns(context)).take(MAX_RUN_HISTORY)
+        prefs(context).edit()
+            .putString(KEY_RUN_HISTORY, updated.joinToString(";") { encodeRun(it) })
+            .apply()
+    }
+
+    private fun encodeRun(run: RunEntry): String = listOf(
+        run.timestampMillis,
+        run.durationMs,
+        run.distanceMeters,
+        run.steps,
+        if (run.completed) 1 else 0
+    ).joinToString("|")
+
+    private fun decodeRun(value: String): RunEntry? {
+        val fields = value.split('|')
+        if (fields.size != 5) return null
+        return RunEntry(
+            timestampMillis = fields[0].toLongOrNull() ?: return null,
+            durationMs = fields[1].toLongOrNull() ?: return null,
+            distanceMeters = fields[2].toDoubleOrNull() ?: return null,
+            steps = fields[3].toLongOrNull() ?: return null,
+            completed = fields[4] == "1"
+        )
     }
 
     fun finalMetrics(context: Context): Metrics = Metrics(

@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -28,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
+import java.text.NumberFormat
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.roundToLong
@@ -38,6 +40,10 @@ class WalkService : Service() {
     private var notificationTicker: Job? = null
     @Volatile private var stopRequested = false
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppPreferences.localizedContext(newBase))
+    }
+
     override fun onCreate() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -45,20 +51,20 @@ class WalkService : Service() {
             manager.createNotificationChannel(
                 NotificationChannel(
                     ACTIVE_CHANNEL_ID,
-                    "Atividade em andamento",
+                    getString(R.string.channel_active_name),
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "Contador permanente das atividades do LiteWalker"
+                    description = getString(R.string.channel_active_description)
                     setShowBadge(false)
                 }
             )
             manager.createNotificationChannel(
                 NotificationChannel(
                     RESULT_CHANNEL_ID,
-                    "Resultado das atividades",
+                    getString(R.string.channel_result_name),
                     NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
-                    description = "Notificação quando uma atividade termina"
+                    description = getString(R.string.channel_result_description)
                 }
             )
         }
@@ -99,18 +105,17 @@ class WalkService : Service() {
         val metrics = WalkState.metricsAt(this, elapsedMs)
         val elapsedSeconds = (elapsedMs / 1_000L).toInt()
         val totalSeconds = (totalMs / 1_000L).toInt().coerceAtLeast(1)
-        val text = String.format(
-            Locale.getDefault(),
-            "%s • %.2f km • %,d passos • %d km/h",
+        val text = getString(
+            R.string.notification_progress,
             formatDuration(metrics.durationMs),
-            metrics.distanceMeters / 1000.0,
-            metrics.steps,
+            formatDistance(metrics.distanceMeters),
+            formatSteps(metrics.steps),
             WalkState.targetSpeedKmh(this)
         )
 
         return NotificationCompat.Builder(this, ACTIVE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_walk)
-            .setContentTitle("LiteWalker")
+            .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
             .setContentIntent(openAppPendingIntent())
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
@@ -126,12 +131,11 @@ class WalkService : Service() {
     }
 
     private fun resultNotification(title: String, metrics: WalkState.Metrics): android.app.Notification {
-        val text = String.format(
-            Locale.getDefault(),
-            "%s • %.2f km • %,d passos",
+        val text = getString(
+            R.string.notification_result,
             formatDuration(metrics.durationMs),
-            metrics.distanceMeters / 1000.0,
-            metrics.steps
+            formatDistance(metrics.distanceMeters),
+            formatSteps(metrics.steps)
         )
         return NotificationCompat.Builder(this, RESULT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_walk)
@@ -169,6 +173,16 @@ class WalkService : Service() {
         }
     }
 
+    private fun formatDistance(distanceMeters: Double): String =
+        NumberFormat.getNumberInstance(resources.configuration.locales[0]).run {
+            minimumFractionDigits = 2
+            maximumFractionDigits = 2
+            format(distanceMeters / 1_000.0)
+        }
+
+    private fun formatSteps(steps: Long): String =
+        NumberFormat.getIntegerInstance(resources.configuration.locales[0]).format(steps)
+
     private suspend fun runWalk(startMillis: Long) {
         val client = HealthConnectClient.getOrCreate(this)
 
@@ -203,7 +217,7 @@ class WalkService : Service() {
             }
 
             WalkState.finish(this)
-            resultTitle = "Atividade concluída"
+            resultTitle = getString(R.string.notification_completed)
             resultMetrics = WalkState.finalMetrics(this)
         } catch (cancelled: CancellationException) {
             if (!stopRequested) throw cancelled
@@ -214,7 +228,7 @@ class WalkService : Service() {
                 resultMetrics = withContext(NonCancellable) {
                     finalizeStoppedWalk(client, startMillis, sessionId)
                 }
-                resultTitle = "Progresso salvo"
+                resultTitle = getString(R.string.notification_saved)
             }
 
             notificationTicker?.cancel()

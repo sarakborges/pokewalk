@@ -1,5 +1,7 @@
 <resources>
     <color name="app_background">#F4F7F6</color>
+    <color name="app_background_dark">#101513</color>
     <color name="accent_teal">#1F7A6E</color>
+    <color name="accent_teal_dark">#268D80</color>
     <color name="launcher_background">#DCEEEA</color>
 </resources>

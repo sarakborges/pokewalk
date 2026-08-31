@@ -1,0 +1,65 @@
+<resources>
+    <string name="app_name">LiteWalker</string>
+    <string name="launcher_icon_description">Ícone de aventureiro do LiteWalker</string>
+    <string name="subtitle">Simule seu exercício</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="theme_toggle_description">Alternar entre modo claro e escuro</string>
+    <string name="language_toggle_description">Alternar entre português do Brasil e inglês dos Estados Unidos</string>
+
+    <string name="configure_activity">Configurar atividade</string>
+    <string name="configure_subtitle">Ajuste os controles antes de começar.</string>
+    <string name="speed">VELOCIDADE</string>
+    <string name="speed_min">1 km/h</string>
+    <string name="speed_max">8 km/h</string>
+    <string name="distance">DISTÂNCIA</string>
+    <string name="distance_min">1 km</string>
+    <string name="distance_max">20 km</string>
+    <string name="estimated_time">TEMPO ESTIMADO</string>
+    <string name="activity_title">Sua atividade</string>
+    <string name="metric_time">TEMPO</string>
+    <string name="metric_distance">DISTÂNCIA</string>
+    <string name="metric_steps">PASSOS</string>
+    <string name="start_distance">Iniciar %1$d km</string>
+    <string name="cancel_activity">Cancelar atividade</string>
+    <string name="status_in_progress">Em andamento</string>
+    <string name="status_completed">Concluída</string>
+    <string name="status_saved">Progresso salvo</string>
+    <string name="status_ready">Pronta para começar</string>
+
+    <string name="history_title">Últimas 5 atividades</string>
+    <string name="clear_history">Limpar</string>
+    <string name="history_empty">Suas atividades concluídas ou interrompidas aparecerão aqui.</string>
+    <string name="history_completed">Concluída</string>
+    <string name="history_stopped">Interrompida</string>
+    <string name="history_metrics">%1$s km • %2$s • %3$s passos</string>
+    <string name="clear_history_title">Limpar histórico?</string>
+    <string name="clear_history_message">Isso remove as cinco atividades recentes salvas pelo LiteWalker. Os registros do Health Connect não serão apagados.</string>
+    <string name="clear_history_confirm">Limpar</string>
+    <string name="cancel">Cancelar</string>
+
+    <string name="health_permission_denied">Permita passos e distância no Health Connect.</string>
+    <string name="notification_permission_denied">Permita notificações para iniciar a atividade.</string>
+    <string name="activity_permission_denied">A permissão de atividade física é necessária.</string>
+    <string name="health_connect_unavailable">Health Connect indisponível ou desatualizado.</string>
+    <string name="health_connect_error">Não foi possível acessar o Health Connect.</string>
+    <string name="notifications_disabled">Ative as notificações do LiteWalker nas configurações do Android.</string>
+    <string name="activity_error">Não foi possível concluir: %1$s</string>
+
+    <string name="privacy">Privacidade</string>
+    <string name="privacy_description">Abrir política de privacidade</string>
+    <string name="privacy_title">Privacidade</string>
+    <string name="privacy_view_online">Ver online</string>
+    <string name="close">Fechar</string>
+    <string name="privacy_policy_text">O LiteWalker não cria conta, não exibe anúncios, não vende dados e não envia dados a servidores próprios. Com sua autorização, o app grava estimativas de passos e distância no Health Connect. Preferências, atividade em andamento e as cinco atividades mais recentes ficam neste aparelho; os registros de saúde permanecem sob o controle do Health Connect. Você pode limpar o histórico local dentro do app, revogar permissões ou apagar registros do Health Connect a qualquer momento.</string>
+    <string name="footer_version">LiteWalker • v%1$s</string>
+
+    <string name="channel_active_name">Atividade em andamento</string>
+    <string name="channel_active_description">Contador permanente das atividades do LiteWalker</string>
+    <string name="channel_result_name">Resultado das atividades</string>
+    <string name="channel_result_description">Notificação quando uma atividade termina</string>
+    <string name="notification_progress">%1$s • %2$s km • %3$s passos • %4$d km/h</string>
+    <string name="notification_result">%1$s • %2$s km • %3$s passos</string>
+    <string name="notification_completed">Atividade concluída</string>
+    <string name="notification_saved">Progresso salvo</string>
+</resources>
