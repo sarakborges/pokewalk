@@ -14,7 +14,6 @@
     <string name="endless_mode_toggle_description">Ativar ou desativar o modo sem limite</string>
     <string name="endless_value">Sem limite</string>
     <string name="until_you_stop">Até você parar</string>
-    <string name="kilometer_alert_hint">Você receberá uma notificação a cada quilômetro em qualquer modo.</string>
     <string name="speed">VELOCIDADE</string>
     <string name="speed_min">1 km/h</string>
     <string name="speed_max">8 km/h</string>

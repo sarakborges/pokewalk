@@ -38,7 +38,7 @@ jobs:
         run: gradle --no-daemon :app:assembleRelease
 
       - name: Copy unsigned APK
-        run: cp app/build/outputs/apk/release/app-release-unsigned.apk LiteWalker-v1.1.0-unsigned.apk
+        run: cp app/build/outputs/apk/release/app-release-unsigned.apk LiteWalker-v1.1.1-unsigned.apk
 
       - name: Package Android signing tools
         run: |
@@ -52,8 +52,8 @@ jobs:
       - name: Upload unsigned APK
         uses: actions/upload-artifact@v4
         with:
-          name: LiteWalker-v1.1.0-unsigned-apk
-          path: LiteWalker-v1.1.0-unsigned.apk
+          name: LiteWalker-v1.1.1-unsigned-apk
+          path: LiteWalker-v1.1.1-unsigned.apk
           if-no-files-found: error
 
       - name: Upload Android signing tools

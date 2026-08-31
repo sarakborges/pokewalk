@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowCompat.getInsetsController(window, window.decorView).apply {
-            isAppearanceLightStatusBars = !darkMode
+            isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = !darkMode
         }
         window.navigationBarColor = palette.background
@@ -139,7 +139,7 @@ class MainActivity : ComponentActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(palette.background)
+            setBackgroundColor(palette.header)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -164,6 +164,7 @@ class MainActivity : ComponentActivity() {
             isFillViewport = true
             clipToPadding = false
             overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
+            setBackgroundColor(palette.background)
         }
 
         val content = LinearLayout(this).apply {
@@ -234,28 +235,48 @@ class MainActivity : ComponentActivity() {
 
     private fun createFixedHeader(): View {
         val header = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(12), dp(12), dp(12))
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(12), dp(16), dp(12))
             setBackgroundColor(palette.header)
             elevation = dp(8).toFloat()
         }
 
-        val iconFrame = FrameLayout(this).apply {
-            background = roundedDrawable(palette.iconBackground, 17)
+        val brandRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
+        val iconFrame = FrameLayout(this).apply {
+            background = roundedDrawable(palette.iconBackground, 18)
+        }
+        val iconShadow = ImageView(this).apply {
+            setImageResource(R.drawable.ic_launcher_foreground)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            imageTintList = ColorStateList.valueOf(Color.BLACK)
+            alpha = 0.78f
+            scaleX = 1.58f
+            scaleY = 1.58f
+            translationX = dp(1).toFloat()
+            translationY = dp(2).toFloat()
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+        iconFrame.addView(
+            iconShadow,
+            FrameLayout.LayoutParams(dp(64), dp(64), Gravity.CENTER)
+        )
         val icon = ImageView(this).apply {
             setImageResource(R.drawable.ic_launcher_foreground)
             contentDescription = getString(R.string.launcher_icon_description)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
-            setPadding(dp(5), dp(5), dp(5), dp(5))
+            imageTintList = ColorStateList.valueOf(Color.WHITE)
+            scaleX = 1.58f
+            scaleY = 1.58f
         }
         iconFrame.addView(
             icon,
-            FrameLayout.LayoutParams(dp(58), dp(58), Gravity.CENTER)
+            FrameLayout.LayoutParams(dp(64), dp(64), Gravity.CENTER)
         )
-        header.addView(iconFrame, LinearLayout.LayoutParams(dp(58), dp(58)).apply {
-            marginEnd = dp(12)
+        brandRow.addView(iconFrame, LinearLayout.LayoutParams(dp(64), dp(64)).apply {
+            marginEnd = dp(14)
         })
 
         val copy = LinearLayout(this).apply {
@@ -263,55 +284,55 @@ class MainActivity : ComponentActivity() {
         }
         copy.addView(TextView(this).apply {
             text = getString(R.string.app_name)
-            textSize = 22f
-            setTextColor(palette.textPrimary)
+            textSize = 23f
+            setTextColor(palette.headerTextPrimary)
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
             includeFontPadding = false
         })
         copy.addView(TextView(this).apply {
             text = getString(R.string.subtitle)
             textSize = 13f
-            setTextColor(palette.textMuted)
+            setTextColor(palette.headerTextMuted)
             setLineSpacing(0f, 1.15f)
             setPadding(0, dp(6), 0, 0)
         })
-        header.addView(copy, LinearLayout.LayoutParams(
+        brandRow.addView(copy, LinearLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             1f
         ))
+        header.addView(brandRow, matchWrap())
 
-        val toggles = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.END
+        val controls = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
-        toggles.addView(Switch(this).apply {
-            isChecked = darkMode
-            text = getString(if (darkMode) R.string.theme_dark else R.string.theme_light)
-            textSize = 11f
-            setTextColor(palette.textPrimary)
-            minWidth = 0
-            minimumWidth = 0
-            contentDescription = getString(R.string.theme_toggle_description)
-            setOnCheckedChangeListener { _, checked ->
+        controls.addView(
+            createHeaderToggle(
+                leftText = getString(R.string.theme_light),
+                rightText = getString(R.string.theme_dark),
+                checked = darkMode,
+                description = getString(R.string.theme_toggle_description)
+            ) { checked ->
                 if (checked != darkMode) {
                     AppPreferences.setDarkMode(this@MainActivity, checked)
                     recreate()
                 }
+            },
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginEnd = dp(6)
             }
-        })
+        )
 
         val englishSelected =
             AppPreferences.languageTag(this) == AppPreferences.LANGUAGE_EN_US
-        toggles.addView(Switch(this).apply {
-            isChecked = englishSelected
-            text = if (englishSelected) "EN-US" else "PT-BR"
-            textSize = 11f
-            setTextColor(palette.textPrimary)
-            minWidth = 0
-            minimumWidth = 0
-            contentDescription = getString(R.string.language_toggle_description)
-            setOnCheckedChangeListener { _, checked ->
+        controls.addView(
+            createHeaderToggle(
+                leftText = "PT-BR",
+                rightText = "EN-US",
+                checked = englishSelected,
+                description = getString(R.string.language_toggle_description)
+            ) { checked ->
                 val selectedLanguage = if (checked) {
                     AppPreferences.LANGUAGE_EN_US
                 } else {
@@ -321,14 +342,81 @@ class MainActivity : ComponentActivity() {
                     AppPreferences.setLanguageTag(this@MainActivity, selectedLanguage)
                     recreate()
                 }
+            },
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginStart = dp(6)
             }
-        })
-        header.addView(toggles, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { marginStart = dp(8) })
+        )
+        header.addView(controls, matchWrap().apply { topMargin = dp(11) })
 
         return header
+    }
+
+    private fun createHeaderToggle(
+        leftText: String,
+        rightText: String,
+        checked: Boolean,
+        description: String,
+        onCheckedChanged: (Boolean) -> Unit
+    ): View {
+        val group = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(8), dp(5), dp(8), dp(5))
+            background = roundedDrawable(palette.headerControlBackground, 12)
+        }
+
+        fun label(text: String, selected: Boolean) = TextView(this).apply {
+            this.text = text
+            textSize = 10.5f
+            isSingleLine = true
+            gravity = Gravity.CENTER
+            setTextColor(
+                if (selected) palette.headerTextPrimary else palette.headerTextMuted
+            )
+            typeface = Typeface.create(
+                "sans-serif-medium",
+                if (selected) Typeface.BOLD else Typeface.NORMAL
+            )
+        }
+
+        group.addView(
+            label(leftText, !checked),
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        )
+        group.addView(Switch(this).apply {
+            isChecked = checked
+            text = ""
+            showText = false
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = 0
+            minimumHeight = 0
+            contentDescription = description
+            thumbTintList = ColorStateList(
+                arrayOf(
+                    intArrayOf(android.R.attr.state_checked),
+                    intArrayOf(-android.R.attr.state_checked)
+                ),
+                intArrayOf(Color.WHITE, Color.WHITE)
+            )
+            trackTintList = ColorStateList(
+                arrayOf(
+                    intArrayOf(android.R.attr.state_checked),
+                    intArrayOf(-android.R.attr.state_checked)
+                ),
+                intArrayOf(palette.accent, palette.headerToggleTrack)
+            )
+            setOnCheckedChangeListener { _, value -> onCheckedChanged(value) }
+        }, LinearLayout.LayoutParams(dp(48), dp(32)).apply {
+            marginStart = dp(2)
+            marginEnd = dp(2)
+        })
+        group.addView(
+            label(rightText, checked),
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        )
+        return group
     }
 
     private fun createConfigurationCard(): View {
@@ -470,16 +558,10 @@ class MainActivity : ComponentActivity() {
             textSize = 15f
             setTextColor(palette.accentStrong)
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            isSingleLine = true
         }
         estimateRow.addView(estimatedTimeLabel)
         card.addView(estimateRow, matchWrap().apply { topMargin = dp(18) })
-        card.addView(TextView(this).apply {
-            text = getString(R.string.kilometer_alert_hint)
-            textSize = 12f
-            setTextColor(palette.textMuted)
-            gravity = Gravity.CENTER
-            setPadding(dp(8), dp(11), dp(8), 0)
-        }, matchWrap())
         return card
     }
 
@@ -505,12 +587,23 @@ class MainActivity : ComponentActivity() {
         card.addView(space(18))
 
         val metrics = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(5), dp(14), dp(5))
+            background = roundedDrawable(palette.metricBackground, 14)
         }
-        elapsedValue = addMetric(metrics, getString(R.string.metric_time), "00:00", true)
-        distanceValue = addMetric(metrics, getString(R.string.metric_distance), "0.00 km", true)
-        stepsValue = addMetric(metrics, getString(R.string.metric_steps), "0", false)
+        elapsedValue = addMetricRow(
+            metrics,
+            getString(R.string.metric_time),
+            "00:00",
+            true
+        )
+        distanceValue = addMetricRow(
+            metrics,
+            getString(R.string.metric_distance),
+            "0.00\u00A0km",
+            true
+        )
+        stepsValue = addMetricRow(metrics, getString(R.string.metric_steps), "0", false)
         card.addView(metrics, matchWrap())
 
         activityProgress = ProgressBar(
@@ -760,42 +853,47 @@ class MainActivity : ComponentActivity() {
         ))
     }
 
-    private fun addMetric(
+    private fun addMetricRow(
         parent: LinearLayout,
         label: String,
         initial: String,
-        addEndMargin: Boolean
+        addDivider: Boolean
     ): TextView {
-        val value = TextView(this).apply {
-            text = initial
-            textSize = 20f
-            gravity = Gravity.CENTER
-            setTextColor(palette.textPrimary)
-            typeface = Typeface.create("sans-serif", Typeface.BOLD)
-            includeFontPadding = false
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            minimumHeight = dp(40)
         }
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(8), dp(13), dp(8), dp(13))
-            background = roundedDrawable(palette.metricBackground, 14)
-            addView(value)
-            addView(TextView(this@MainActivity).apply {
-                text = label
-                textSize = 10f
-                letterSpacing = 0.07f
-                gravity = Gravity.CENTER
-                setTextColor(palette.textMuted)
-                setPadding(0, dp(5), 0, 0)
-            })
-        }
-        parent.addView(box, LinearLayout.LayoutParams(
+        row.addView(TextView(this).apply {
+            text = label
+            textSize = 10f
+            letterSpacing = 0.07f
+            setTextColor(palette.textMuted)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            isSingleLine = true
+        }, LinearLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             1f
-        ).apply {
-            if (addEndMargin) marginEnd = dp(7)
-        })
+        ))
+        val value = TextView(this).apply {
+            text = initial
+            textSize = 16f
+            gravity = Gravity.END
+            setTextColor(palette.textPrimary)
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            includeFontPadding = false
+            isSingleLine = true
+            maxLines = 1
+        }
+        row.addView(value)
+        parent.addView(row, matchWrap())
+        if (addDivider) {
+            parent.addView(
+                divider(),
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
+            )
+        }
         return value
     }
 
@@ -881,7 +979,7 @@ class MainActivity : ComponentActivity() {
         elapsedValue.text = formatDuration(metrics.durationMs / 1_000L)
         distanceValue.text = String.format(
             Locale.getDefault(),
-            "%.2f km",
+            "%.2f\u00A0km",
             metrics.distanceMeters / 1_000.0
         )
         stepsValue.text = String.format(Locale.getDefault(), "%,d", metrics.steps)
@@ -1078,46 +1176,58 @@ class MainActivity : ComponentActivity() {
         val divider: Int,
         val danger: Int,
         val dangerSoft: Int,
-        val success: Int
+        val success: Int,
+        val headerTextPrimary: Int,
+        val headerTextMuted: Int,
+        val headerControlBackground: Int,
+        val headerToggleTrack: Int
     ) {
         companion object {
             fun forMode(dark: Boolean): Palette = if (dark) {
                 Palette(
-                    background = Color.rgb(16, 21, 19),
-                    surface = Color.rgb(24, 32, 29),
-                    header = Color.rgb(20, 27, 24),
-                    border = Color.rgb(44, 57, 52),
-                    textPrimary = Color.rgb(243, 247, 245),
-                    textMuted = Color.rgb(170, 184, 178),
-                    accent = Color.rgb(38, 141, 128),
-                    accentStrong = Color.rgb(113, 214, 197),
-                    accentSoft = Color.rgb(29, 59, 53),
-                    iconBackground = Color.rgb(34, 61, 55),
-                    metricBackground = Color.rgb(32, 42, 38),
-                    progressTrack = Color.rgb(52, 67, 61),
-                    divider = Color.rgb(44, 57, 52),
-                    danger = Color.rgb(240, 138, 138),
-                    dangerSoft = Color.rgb(67, 41, 41),
-                    success = Color.rgb(106, 214, 154)
+                    background = Color.rgb(19, 15, 23),
+                    surface = Color.rgb(33, 25, 39),
+                    header = Color.rgb(74, 31, 102),
+                    border = Color.rgb(60, 46, 68),
+                    textPrimary = Color.rgb(252, 248, 253),
+                    textMuted = Color.rgb(189, 175, 196),
+                    accent = Color.rgb(239, 79, 107),
+                    accentStrong = Color.rgb(217, 182, 239),
+                    accentSoft = Color.rgb(57, 40, 72),
+                    iconBackground = Color.rgb(214, 61, 89),
+                    metricBackground = Color.rgb(42, 33, 48),
+                    progressTrack = Color.rgb(71, 56, 79),
+                    divider = Color.rgb(60, 46, 68),
+                    danger = Color.rgb(255, 117, 142),
+                    dangerSoft = Color.rgb(74, 38, 49),
+                    success = Color.rgb(217, 182, 239),
+                    headerTextPrimary = Color.WHITE,
+                    headerTextMuted = Color.rgb(229, 215, 237),
+                    headerControlBackground = Color.rgb(93, 48, 120),
+                    headerToggleTrack = Color.rgb(130, 93, 152)
                 )
             } else {
                 Palette(
-                    background = Color.rgb(244, 247, 246),
+                    background = Color.rgb(247, 242, 250),
                     surface = Color.WHITE,
-                    header = Color.WHITE,
-                    border = Color.rgb(230, 234, 241),
-                    textPrimary = Color.rgb(28, 34, 48),
-                    textMuted = Color.rgb(103, 112, 130),
-                    accent = Color.rgb(31, 122, 110),
-                    accentStrong = Color.rgb(19, 91, 82),
-                    accentSoft = Color.rgb(231, 244, 241),
-                    iconBackground = Color.rgb(220, 238, 234),
-                    metricBackground = Color.rgb(247, 249, 252),
-                    progressTrack = Color.rgb(229, 233, 240),
-                    divider = Color.rgb(235, 238, 243),
-                    danger = Color.rgb(188, 64, 64),
-                    dangerSoft = Color.rgb(252, 235, 235),
-                    success = Color.rgb(35, 132, 81)
+                    header = Color.rgb(80, 35, 111),
+                    border = Color.rgb(227, 217, 234),
+                    textPrimary = Color.rgb(37, 28, 42),
+                    textMuted = Color.rgb(114, 103, 119),
+                    accent = Color.rgb(211, 62, 90),
+                    accentStrong = Color.rgb(111, 58, 145),
+                    accentSoft = Color.rgb(240, 230, 246),
+                    iconBackground = Color.rgb(211, 62, 90),
+                    metricBackground = Color.rgb(248, 244, 250),
+                    progressTrack = Color.rgb(233, 223, 237),
+                    divider = Color.rgb(236, 228, 240),
+                    danger = Color.rgb(181, 47, 73),
+                    dangerSoft = Color.rgb(249, 231, 236),
+                    success = Color.rgb(111, 58, 145),
+                    headerTextPrimary = Color.WHITE,
+                    headerTextMuted = Color.rgb(228, 211, 236),
+                    headerControlBackground = Color.rgb(99, 53, 129),
+                    headerToggleTrack = Color.rgb(137, 104, 160)
                 )
             }
         }
