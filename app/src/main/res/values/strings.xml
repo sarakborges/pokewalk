@@ -1,4 +1,80 @@
 <resources>
     <string name="app_name">LiteWalker</string>
-    <string name="launcher_icon_description">Ícone do LiteWalker</string>
+    <string name="launcher_icon_description">LiteWalker adventurer icon</string>
+    <string name="subtitle">Simulate your exercise</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_toggle_description">Switch between light and dark mode</string>
+    <string name="language_toggle_description">Switch between Brazilian Portuguese and US English</string>
+
+    <string name="configure_activity">Configure activity</string>
+    <string name="configure_subtitle">Adjust the controls before starting.</string>
+    <string name="endless_mode">Endless mode</string>
+    <string name="endless_mode_description">Keep going until you stop the activity.</string>
+    <string name="endless_mode_toggle_description">Enable or disable endless mode</string>
+    <string name="endless_value">Unlimited</string>
+    <string name="until_you_stop">Until you stop</string>
+    <string name="kilometer_alert_hint">You’ll get a notification after every kilometer in any mode.</string>
+    <string name="speed">SPEED</string>
+    <string name="speed_min">1 km/h</string>
+    <string name="speed_max">8 km/h</string>
+    <string name="distance">DISTANCE</string>
+    <string name="distance_min">1 km</string>
+    <string name="distance_max">20 km</string>
+    <string name="estimated_time">ESTIMATED TIME</string>
+    <string name="activity_title">Your activity</string>
+    <string name="metric_time">TIME</string>
+    <string name="metric_distance">DISTANCE</string>
+    <string name="metric_steps">STEPS</string>
+    <string name="start_distance">Start %1$d km</string>
+    <string name="start_endless">Start endless mode</string>
+    <string name="cancel_activity">Cancel activity</string>
+    <string name="status_in_progress">In progress</string>
+    <string name="status_endless">Endless mode</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_saved">Progress saved</string>
+    <string name="status_ready">Ready to start</string>
+
+    <string name="history_title">Last 5 runs</string>
+    <string name="clear_history">Clear</string>
+    <string name="history_empty">Your completed or stopped runs will appear here.</string>
+    <string name="history_completed">Completed</string>
+    <string name="history_stopped">Stopped</string>
+    <string name="history_metrics">%1$s km • %2$s • %3$s steps</string>
+    <string name="clear_history_title">Clear run history?</string>
+    <string name="clear_history_message">This removes the five recent runs stored by LiteWalker. Health Connect records are not deleted.</string>
+    <string name="clear_history_confirm">Clear</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="health_permission_denied">Allow steps and distance in Health Connect.</string>
+    <string name="notification_permission_denied">Allow notifications to start the activity.</string>
+    <string name="activity_permission_denied">Physical activity permission is required.</string>
+    <string name="health_connect_unavailable">Health Connect is unavailable or outdated.</string>
+    <string name="health_connect_error">Could not access Health Connect.</string>
+    <string name="notifications_disabled">Enable LiteWalker notifications in Android settings.</string>
+    <string name="activity_error">Could not complete: %1$s</string>
+
+    <string name="privacy">Privacy</string>
+    <string name="privacy_description">Open privacy policy</string>
+    <string name="privacy_title">Privacy</string>
+    <string name="privacy_view_online">View online</string>
+    <string name="close">Close</string>
+    <string name="privacy_policy_text">LiteWalker does not create accounts, show ads, sell data, or share data with its own servers. With your authorization, the app writes estimated steps and distance to Health Connect. Preferences, the current activity, and the five most recent runs stay on this device; health records remain under Health Connect control. You can clear the local run history inside the app, revoke permissions, or delete Health Connect records at any time.</string>
+    <string name="footer_version">LiteWalker • v%1$s</string>
+
+    <string name="channel_active_name">Activity in progress</string>
+    <string name="channel_active_description">Persistent counter for LiteWalker activities</string>
+    <string name="channel_result_name">Activity results</string>
+    <string name="channel_result_description">Notification when an activity ends</string>
+    <string name="channel_milestone_name">Kilometer milestones</string>
+    <string name="channel_milestone_description">Alert for each kilometer completed</string>
+    <string name="notification_progress">%1$s • %2$s km • %3$s steps • %4$d km/h</string>
+    <string name="notification_result">%1$s • %2$s km • %3$s steps</string>
+    <plurals name="notification_kilometer_title">
+        <item quantity="one">%1$d kilometer completed</item>
+        <item quantity="other">%1$d kilometers completed</item>
+    </plurals>
+    <string name="notification_kilometer_body">%1$s • %2$s steps</string>
+    <string name="notification_completed">Activity completed</string>
+    <string name="notification_saved">Progress saved</string>
 </resources>
