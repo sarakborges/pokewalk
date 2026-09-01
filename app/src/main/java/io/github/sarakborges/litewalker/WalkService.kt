@@ -74,8 +74,7 @@ class WalkService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            stopRequested = true
-            job?.cancel()
+            handleStopRequest()
             return START_NOT_STICKY
         }
 
@@ -86,6 +85,42 @@ class WalkService : Service() {
         startNotificationTicker(start)
         job = scope.launch { runWalk(start) }
         return START_STICKY
+    }
+
+    private fun handleStopRequest() {
+        stopRequested = true
+
+        if (job?.isActive == true) {
+            job?.cancel()
+            return
+        }
+
+        if (!WalkState.isRunning(this)) {
+            notificationTicker?.cancel()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return
+        }
+
+        val startMillis = WalkState.startTimeMillis(this)
+            .takeIf { it > 0L }
+            ?: System.currentTimeMillis()
+        startAsForeground(startMillis)
+        job = scope.launch {
+            val sessionId = UUID.randomUUID().toString()
+            try {
+                val client = HealthConnectClient.getOrCreate(this@WalkService)
+                withContext(NonCancellable) {
+                    finalizeStoppedWalkSafely(client, startMillis, sessionId)
+                }
+            } catch (_: Throwable) {
+                saveStoppedRunLocally(startMillis)
+            } finally {
+                notificationTicker?.cancel()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
+        }
     }
 
     private fun startNotificationTicker(startMillis: Long) {
@@ -259,16 +294,43 @@ class WalkService : Service() {
         } catch (t: Throwable) {
             WalkState.fail(this, t.message ?: t.javaClass.simpleName)
         } finally {
-            if (stopRequested) {
-                withContext(NonCancellable) {
-                    finalizeStoppedWalk(client, startMillis, sessionId)
+            withContext(NonCancellable) {
+                if (stopRequested) {
+                    finalizeStoppedWalkSafely(client, startMillis, sessionId)
+                }
+
+                notificationTicker?.cancel()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
+        }
+    }
+
+    private suspend fun finalizeStoppedWalkSafely(
+        client: HealthConnectClient,
+        startMillis: Long,
+        sessionId: String
+    ) {
+        try {
+            finalizeStoppedWalk(client, startMillis, sessionId)
+        } catch (_: Throwable) {
+            saveStoppedRunLocally(startMillis)
+        }
+    }
+
+    private fun saveStoppedRunLocally(startMillis: Long) {
+        if (!WalkState.isRunning(this)) return
+        val durationMs = (System.currentTimeMillis() - startMillis)
+            .coerceAtLeast(0L)
+            .let { elapsed ->
+                if (WalkState.isEndless(this)) {
+                    elapsed
+                } else {
+                    elapsed.coerceAtMost(WalkState.totalDurationMs(this))
                 }
             }
-
-            notificationTicker?.cancel()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        }
+        val metrics = WalkState.metricsAt(this, durationMs)
+        WalkState.stop(this, metrics.durationMs, metrics.distanceMeters, metrics.steps)
     }
 
     private suspend fun writeScheduledChunk(
@@ -307,27 +369,33 @@ class WalkService : Service() {
         val durationMs = (System.currentTimeMillis() - startMillis).coerceIn(0L, totalDuration)
         val chunks = WalkState.chunkCount(this)
         val elapsedFullChunks = WalkState.fullChunksElapsed(this, durationMs)
-        var completed = WalkState.completedChunks(this).coerceIn(0, chunks)
+        val completed = WalkState.completedChunks(this).coerceIn(0, chunks)
 
-        // Reconcile any complete minute that elapsed before the stop request.
-        for (index in completed until elapsedFullChunks) {
+        // Reconcile long gaps as one aggregate interval so stopping stays responsive.
+        if (completed < elapsedFullChunks) {
+            val completedDuration = WalkState.chunkStartOffsetMs(completed)
+                .coerceIn(0L, durationMs)
+            val fullChunkDuration = WalkState.chunkStartOffsetMs(elapsedFullChunks)
+                .coerceIn(completedDuration, durationMs)
+            val completedMetrics = WalkState.metricsAt(this, completedDuration)
+            val fullChunkMetrics = WalkState.metricsAt(this, fullChunkDuration)
             val intervalStart = Instant.ofEpochMilli(
-                startMillis + WalkState.chunkStartOffsetMs(index)
+                startMillis + completedDuration
             )
             val intervalEnd = Instant.ofEpochMilli(
-                startMillis + WalkState.chunkEndOffsetMs(this, index)
+                startMillis + fullChunkDuration
             )
             writeChunk(
                 client = client,
                 sessionId = sessionId,
-                index = index,
+                index = completed,
                 intervalStart = intervalStart,
                 intervalEnd = intervalEnd,
-                meters = WalkState.distanceForChunk(this, index),
-                steps = WalkState.stepsForChunk(this, index).toLong()
+                meters = (fullChunkMetrics.distanceMeters - completedMetrics.distanceMeters)
+                    .coerceAtLeast(0.0),
+                steps = (fullChunkMetrics.steps - completedMetrics.steps).coerceAtLeast(0L)
             )
-            WalkState.markChunkWritten(this, index + 1)
-            completed = index + 1
+            WalkState.markChunkWritten(this, elapsedFullChunks)
         }
 
         // Persist the elapsed fraction of the current minute when the user stops early.

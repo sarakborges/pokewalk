@@ -335,12 +335,12 @@ class MainActivity : ComponentActivity() {
                 }
             },
             matchWrap().apply {
-                topMargin = dp(6)
+                topMargin = dp(2)
             }
         )
         header.addView(
             controls,
-            LinearLayout.LayoutParams(dp(132), ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            LinearLayout.LayoutParams(dp(124), ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 marginStart = dp(6)
             }
         )
@@ -358,8 +358,6 @@ class MainActivity : ComponentActivity() {
         val group = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(8), dp(5), dp(8), dp(5))
-            background = roundedDrawable(palette.headerControlBackground, 12)
         }
 
         fun label(text: String, selected: Boolean) = TextView(this).apply {
@@ -616,7 +614,7 @@ class MainActivity : ComponentActivity() {
         elapsedValue = addMetricRow(
             metrics,
             getString(R.string.metric_time),
-            "00:00",
+            "00:00:00",
             true
         )
         distanceValue = addMetricRow(
@@ -742,8 +740,8 @@ class MainActivity : ComponentActivity() {
             val entry = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                minimumHeight = dp(68)
-                setPadding(0, dp(12), 0, dp(12))
+                minimumHeight = dp(44)
+                setPadding(0, dp(6), 0, dp(6))
             }
 
             val details = LinearLayout(this).apply {
@@ -753,7 +751,7 @@ class MainActivity : ComponentActivity() {
             if (run.completed) {
                 details.addView(TextView(this).apply {
                     text = getString(R.string.history_completed)
-                    textSize = 12f
+                    textSize = 11f
                     setTextColor(palette.success)
                     typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 }, matchWrap())
@@ -765,13 +763,13 @@ class MainActivity : ComponentActivity() {
                     formatDuration(run.durationMs / 1_000L),
                     integerFormat.format(run.steps)
                 )
-                textSize = 11.5f
+                textSize = 11f
                 setTextColor(palette.textPrimary)
-                setPadding(0, if (run.completed) dp(4) else 0, 0, 0)
+                setPadding(0, if (run.completed) dp(2) else 0, 0, 0)
                 isSingleLine = true
                 setAutoSizeTextTypeUniformWithConfiguration(
                     9,
-                    12,
+                    11,
                     1,
                     TypedValue.COMPLEX_UNIT_SP
                 )
@@ -1117,7 +1115,7 @@ class MainActivity : ComponentActivity() {
             WalkState.Metrics(0L, 0.0, 0L)
         }
 
-        elapsedValue.text = formatDuration(metrics.durationMs / 1_000L)
+        elapsedValue.text = formatCurrentDuration(metrics.durationMs / 1_000L)
         distanceValue.text = String.format(
             Locale.getDefault(),
             "%.2f\u00A0km",
@@ -1148,6 +1146,8 @@ class MainActivity : ComponentActivity() {
             activityState.setTextColor(palette.accentStrong)
             actionButton.text = getString(R.string.cancel_activity)
             actionButton.background = roundedDrawable(palette.danger, 16)
+            actionButton.isEnabled = true
+            actionButton.isClickable = true
         } else {
             activityState.text = getString(R.string.status_ready)
             activityState.setTextColor(palette.textMuted)
@@ -1193,6 +1193,16 @@ class MainActivity : ComponentActivity() {
             "%02d:%02d",
             totalSeconds / 3_600L,
             (totalSeconds % 3_600L) / 60L
+        )
+    }
+
+    private fun formatCurrentDuration(totalSeconds: Long): String {
+        return String.format(
+            Locale.getDefault(),
+            "%02d:%02d:%02d",
+            totalSeconds / 3_600L,
+            (totalSeconds % 3_600L) / 60L,
+            totalSeconds % 60L
         )
     }
 
@@ -1266,7 +1276,10 @@ class MainActivity : ComponentActivity() {
 
     private fun stopActivityRun() {
         if (!WalkState.isRunning(this)) return
-        startService(Intent(this, WalkService::class.java).setAction(WalkService.ACTION_STOP))
+        ContextCompat.startForegroundService(
+            this,
+            Intent(this, WalkService::class.java).setAction(WalkService.ACTION_STOP)
+        )
     }
 
     private fun showMessage(message: String) {
