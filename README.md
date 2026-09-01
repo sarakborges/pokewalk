@@ -2,7 +2,7 @@
 
 Aplicativo Android para acompanhar caminhadas planejadas e registrar estimativas de passos e distância no Health Connect.
 
-Versão atual: **v1.1.5** (`versionCode 10105`).
+Versão atual: **v1.1.6** (`versionCode 10106`).
 
 ## Destaques
 
@@ -16,7 +16,7 @@ Versão atual: **v1.1.5** (`versionCode 10105`).
 - acompanhamento de tempo, distância, passos estimados e progresso;
 - encerramento com salvamento do progresso já realizado e limpeza do painel atual;
 - tempo do exercício atual e do histórico no formato `HH:MM`;
-- histórico local centralizado dos cinco exercícios mais recentes, sem rótulos redundantes e com botão compacto vermelho de limpeza;
+- histórico local dos cinco exercícios mais recentes, com detalhes à esquerda e data/hora à direita alinhados pelo centro vertical;
 - notificações durante o exercício e a cada quilômetro, sem notificação adicional ao encerrar;
 - versão fixada no rodapé;
 - botões dedicados para novidades e política de privacidade;

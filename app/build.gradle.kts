@@ -10,8 +10,8 @@ android {
         applicationId = "io.github.sarakborges.litewalker"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10105
-        versionName = "1.1.5"
+        versionCode = 10106
+        versionName = "1.1.6"
     }
 
     buildFeatures {

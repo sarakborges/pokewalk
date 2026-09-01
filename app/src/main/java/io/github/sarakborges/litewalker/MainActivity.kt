@@ -711,17 +711,13 @@ class MainActivity : ComponentActivity() {
                 textSize = 13f
                 setTextColor(palette.textMuted)
                 setPadding(0, dp(6), 0, dp(2))
-                gravity = Gravity.CENTER
             })
             return
         }
 
         val locale = resources.configuration.locales[0]
-        val dateFormat = DateFormat.getDateTimeInstance(
-            DateFormat.SHORT,
-            DateFormat.SHORT,
-            locale
-        )
+        val dateFormat = DateFormat.getDateInstance(DateFormat.SHORT, locale)
+        val timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, locale)
         val distanceFormat = NumberFormat.getNumberInstance(locale).apply {
             minimumFractionDigits = 2
             maximumFractionDigits = 2
@@ -740,37 +736,59 @@ class MainActivity : ComponentActivity() {
             }
 
             val entry = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                minimumHeight = dp(68)
                 setPadding(0, dp(12), 0, dp(12))
             }
+
+            val details = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            }
             if (run.completed) {
-                entry.addView(TextView(this).apply {
+                details.addView(TextView(this).apply {
                     text = getString(R.string.history_completed)
-                    textSize = 13f
+                    textSize = 12f
                     setTextColor(palette.success)
                     typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                    gravity = Gravity.CENTER
                 }, matchWrap())
             }
-            entry.addView(TextView(this).apply {
-                text = dateFormat.format(run.timestampMillis)
-                textSize = 11f
-                setTextColor(palette.textMuted)
-                gravity = Gravity.CENTER
-                setPadding(0, if (run.completed) dp(4) else 0, 0, 0)
-            }, matchWrap())
-            entry.addView(TextView(this).apply {
+            details.addView(TextView(this).apply {
                 text = getString(
                     R.string.history_metrics,
                     distanceFormat.format(run.distanceMeters / 1_000.0),
                     formatDuration(run.durationMs / 1_000L),
                     integerFormat.format(run.steps)
                 )
-                textSize = 13f
+                textSize = 12.5f
                 setTextColor(palette.textPrimary)
-                setPadding(0, dp(5), 0, 0)
-                gravity = Gravity.CENTER
+                setPadding(0, if (run.completed) dp(4) else 0, 0, 0)
             }, matchWrap())
+            entry.addView(
+                details,
+                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            )
+
+            val timestamp = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.END or Gravity.CENTER_VERTICAL
+                setPadding(dp(12), 0, 0, 0)
+            }
+            timestamp.addView(TextView(this).apply {
+                text = dateFormat.format(run.timestampMillis)
+                textSize = 10.5f
+                setTextColor(palette.textMuted)
+                gravity = Gravity.END
+            })
+            timestamp.addView(TextView(this).apply {
+                text = timeFormat.format(run.timestampMillis)
+                textSize = 10.5f
+                setTextColor(palette.textMuted)
+                gravity = Gravity.END
+                setPadding(0, dp(2), 0, 0)
+            })
+            entry.addView(timestamp)
             historyList.addView(entry)
         }
     }
