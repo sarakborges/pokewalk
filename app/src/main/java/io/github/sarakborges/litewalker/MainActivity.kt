@@ -624,20 +624,14 @@ class MainActivity : ComponentActivity() {
             }
         )
 
-        actionButton = Button(this).apply {
-            textSize = 16f
-            isAllCaps = false
-            minHeight = dp(58)
-            setTextColor(Color.WHITE)
-            typeface = Typeface.create("sans-serif", Typeface.BOLD)
-            stateListAnimator = null
-            elevation = 0f
-            setOnClickListener {
-                if (WalkState.isRunning(this@MainActivity)) {
-                    stopActivityRun()
-                } else {
-                    prepareActivityRun()
-                }
+        actionButton = largeActionButton(
+            normalColor = palette.primaryAction,
+            pressedColor = palette.primaryActionPressed
+        ) {
+            if (WalkState.isRunning(this@MainActivity)) {
+                stopActivityRun()
+            } else {
+                prepareActivityRun()
             }
         }
         card.addView(actionButton, matchWrap())
@@ -658,22 +652,21 @@ class MainActivity : ComponentActivity() {
                 1f
             )
         )
-        clearHistoryButton = compactButton(
-            text = getString(R.string.clear_history),
-            description = getString(R.string.clear_history_description),
-            backgroundColor = palette.dangerSoft,
-            pressedColor = palette.dangerButtonPressed,
-            textColor = palette.danger,
-            strokeColor = palette.danger,
-            onClick = ::confirmClearHistory
-        )
-        header.addView(clearHistoryButton)
         card.addView(header)
 
         historyList = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
         card.addView(historyList, matchWrap().apply { topMargin = dp(12) })
+
+        clearHistoryButton = largeActionButton(
+            text = getString(R.string.clear_history),
+            description = getString(R.string.clear_history_description),
+            normalColor = palette.accent,
+            pressedColor = palette.dangerButtonPressed,
+            onClick = ::confirmClearHistory
+        )
+        card.addView(clearHistoryButton, matchWrap().apply { topMargin = dp(14) })
         return card
     }
 
@@ -730,18 +723,23 @@ class MainActivity : ComponentActivity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
             }
-            topRow.addView(TextView(this).apply {
-                text = getString(
-                    if (run.completed) R.string.history_completed else R.string.history_stopped
+            if (run.completed) {
+                topRow.addView(TextView(this).apply {
+                    text = getString(R.string.history_completed)
+                    textSize = 13f
+                    setTextColor(palette.success)
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                }, LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+                ))
+            } else {
+                topRow.addView(
+                    View(this),
+                    LinearLayout.LayoutParams(0, 1, 1f)
                 )
-                textSize = 13f
-                setTextColor(if (run.completed) palette.success else palette.textMuted)
-                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            }, LinearLayout.LayoutParams(
-                0,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                1f
-            ))
+            }
             topRow.addView(TextView(this).apply {
                 text = dateFormat.format(run.timestampMillis)
                 textSize = 11f
@@ -812,6 +810,31 @@ class MainActivity : ComponentActivity() {
             pressedColor = pressedColor,
             radiusDp = 12,
             strokeColor = strokeColor
+        )
+        setOnClickListener { onClick() }
+    }
+
+    private fun largeActionButton(
+        text: String = "",
+        description: String? = null,
+        normalColor: Int,
+        pressedColor: Int,
+        onClick: () -> Unit
+    ) = Button(this).apply {
+        this.text = text
+        description?.let { contentDescription = it }
+        textSize = 16f
+        isAllCaps = false
+        minHeight = dp(58)
+        minimumHeight = dp(58)
+        setTextColor(Color.WHITE)
+        typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        stateListAnimator = null
+        elevation = 0f
+        background = statefulRoundedDrawable(
+            normalColor = normalColor,
+            pressedColor = pressedColor,
+            radiusDp = 16
         )
         setOnClickListener { onClick() }
     }
@@ -1256,7 +1279,7 @@ class MainActivity : ComponentActivity() {
                     divider = Color.rgb(60, 46, 68),
                     danger = Color.rgb(255, 117, 142),
                     dangerSoft = Color.rgb(74, 38, 49),
-                    dangerButtonPressed = Color.rgb(93, 44, 56),
+                    dangerButtonPressed = Color.rgb(196, 51, 79),
                     success = Color.rgb(217, 182, 239),
                     primaryAction = Color.rgb(122, 77, 160),
                     primaryActionPressed = Color.rgb(99, 58, 133),
@@ -1282,7 +1305,7 @@ class MainActivity : ComponentActivity() {
                     divider = Color.rgb(236, 228, 240),
                     danger = Color.rgb(181, 47, 73),
                     dangerSoft = Color.rgb(249, 231, 236),
-                    dangerButtonPressed = Color.rgb(243, 206, 216),
+                    dangerButtonPressed = Color.rgb(168, 42, 66),
                     success = Color.rgb(111, 58, 145),
                     primaryAction = Color.rgb(111, 58, 145),
                     primaryActionPressed = Color.rgb(87, 38, 111),
