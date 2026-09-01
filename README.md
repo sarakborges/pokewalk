@@ -2,19 +2,21 @@
 
 Aplicativo Android para acompanhar caminhadas planejadas e registrar estimativas de passos e distância no Health Connect.
 
-Versão atual: **v1.1.4** (`versionCode 10104`).
+Versão atual: **v1.1.5** (`versionCode 10105`).
 
 ## Destaques
 
-- cabeçalho fixo com controles identificados dos dois lados;
+- cabeçalho fixo com seletores de tema e idioma empilhados à direita;
 - paleta inspirada na Master Ball, em roxo com detalhes vermelhos;
 - modos claro e escuro, com seleção persistente;
 - interface completa em português do Brasil e inglês dos Estados Unidos;
 - modo sem limite, que continua até a atividade ser encerrada manualmente;
-- controle de distância oculto automaticamente no modo sem limite;
+- distância e duração estimada ocultas automaticamente no modo sem limite;
+- cards que podem ser recolhidos e expandidos individualmente;
 - acompanhamento de tempo, distância, passos estimados e progresso;
 - encerramento com salvamento do progresso já realizado e limpeza do painel atual;
-- histórico local dos cinco exercícios mais recentes, sem rótulos redundantes e com botão compacto vermelho de limpeza;
+- tempo do exercício atual e do histórico no formato `HH:MM`;
+- histórico local centralizado dos cinco exercícios mais recentes, sem rótulos redundantes e com botão compacto vermelho de limpeza;
 - notificações durante o exercício e a cada quilômetro, sem notificação adicional ao encerrar;
 - versão fixada no rodapé;
 - botões dedicados para novidades e política de privacidade;

@@ -6,14 +6,16 @@
     <string name="theme_dark">Escuro</string>
     <string name="theme_toggle_description">Escolher entre tema claro e escuro</string>
     <string name="language_toggle_description">Escolher entre português do Brasil e inglês dos Estados Unidos</string>
+    <string name="collapse_card">Recolher card</string>
+    <string name="expand_card">Expandir card</string>
 
-    <string name="configure_activity">Prepare seu exercício</string>
-    <string name="configure_subtitle">Escolha o ritmo e a distância para começar.</string>
-    <string name="endless_mode">Exercício sem limite</string>
-    <string name="endless_mode_description">Continue até decidir encerrar.</string>
-    <string name="endless_mode_toggle_description">Alternar entre distância definida e exercício sem limite</string>
+    <string name="configure_activity">Configure seu exercício</string>
+    <string name="configure_subtitle">Defina a velocidade e a distância antes de começar.</string>
+    <string name="endless_mode">Modo sem limite</string>
+    <string name="endless_mode_description">Continue pelo tempo que quiser.</string>
+    <string name="endless_mode_toggle_description">Alternar entre uma distância definida e o modo sem limite</string>
     <string name="endless_value">Sem limite</string>
-    <string name="until_you_stop">Até você encerrar</string>
+    <string name="until_you_stop">Sem limite de tempo</string>
     <string name="speed">VELOCIDADE</string>
     <string name="speed_min">1 km/h</string>
     <string name="speed_max">8 km/h</string>
@@ -26,9 +28,9 @@
     <string name="metric_distance">DISTÂNCIA</string>
     <string name="metric_steps">PASSOS</string>
     <string name="start_distance">Iniciar exercício de %1$d km</string>
-    <string name="start_endless">Iniciar exercício sem limite</string>
+    <string name="start_endless">Iniciar modo sem limite</string>
     <string name="cancel_activity">Encerrar exercício</string>
-    <string name="status_in_progress">Ativo</string>
+    <string name="status_in_progress">Em andamento</string>
     <string name="status_endless">Sem limite</string>
     <string name="status_ready">Pronto</string>
 
@@ -53,8 +55,8 @@
 
     <string name="changelog">Novidades</string>
     <string name="changelog_description">Abrir histórico de versões</string>
-    <string name="changelog_title">O que mudou</string>
-    <string name="changelog_text">v1.1.4\n• O botão Limpar voltou à posição compacta ao lado do título do histórico\n• Limpar agora tem o mesmo visual preenchido dos demais botões, em vermelho\n\nv1.1.3\n• O texto Salvo foi removido do histórico de exercícios interrompidos\n\nv1.1.2\n• Textos em português revisados\n• O controle de distância some no modo sem limite\n• O launcher agora usa o mesmo ícone do cabeçalho\n• Cards planos e botões de ação mais claros\n• O painel atual é zerado ao encerrar o exercício\n• A notificação de encerramento foi removida\n\nv1.1.1\n• Nova identidade visual em roxo e vermelho\n• Ícone maior no cabeçalho e seletores com texto dos dois lados\n• Métricas reunidas em um único card compacto\n\nv1.1.0\n• Modo sem limite e alertas por quilômetro\n• Temas claro/escuro, PT-BR/EN-US e histórico de exercícios recentes</string>
+    <string name="changelog_title">O que há de novo</string>
+    <string name="changelog_text">v1.1.5\n• Controles para recolher e expandir cada card\n• Distância e duração estimada ocultas no modo sem limite\n• Tempo do exercício atual e do histórico exibido em HH:MM\n• Informações dos exercícios centralizadas no histórico\n• Seletores de tema e idioma empilhados à direita no cabeçalho\n\nv1.1.4\n• O botão Limpar voltou à posição compacta ao lado do título do histórico\n• Limpar agora tem o mesmo visual preenchido dos demais botões, em vermelho\n\nv1.1.3\n• O texto Salvo foi removido do histórico de exercícios interrompidos\n\nv1.1.2\n• Textos em português revisados\n• O controle de distância some no modo sem limite\n• O launcher agora usa o mesmo ícone do cabeçalho\n• Cards planos e botões de ação mais claros\n• O painel atual é zerado ao encerrar o exercício\n• A notificação de encerramento foi removida\n\nv1.1.1\n• Nova identidade visual em roxo e vermelho\n• Ícone maior no cabeçalho e seletores com texto dos dois lados\n• Métricas reunidas em um único card compacto\n\nv1.1.0\n• Modo sem limite e alertas por quilômetro\n• Temas claro/escuro, PT-BR/EN-US e histórico de exercícios recentes</string>
 
     <string name="privacy">Privacidade</string>
     <string name="privacy_description">Abrir política de privacidade</string>

@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var stepsValue: TextView
     private lateinit var distanceSeek: SeekBar
     private lateinit var distanceSliderGroup: LinearLayout
+    private lateinit var distanceSection: LinearLayout
     private lateinit var speedSeek: SeekBar
     private lateinit var endlessSwitch: Switch
     private lateinit var selectedDistanceLabel: TextView
@@ -247,16 +248,13 @@ class MainActivity : ComponentActivity() {
 
     private fun createFixedHeader(): View {
         val header = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
             setBackgroundColor(palette.header)
             elevation = dp(8).toFloat()
         }
 
-        val brandRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
         val iconFrame = FrameLayout(this).apply {
             background = roundedDrawable(palette.iconBackground, 18)
         }
@@ -271,8 +269,8 @@ class MainActivity : ComponentActivity() {
             icon,
             FrameLayout.LayoutParams(dp(64), dp(64), Gravity.CENTER)
         )
-        brandRow.addView(iconFrame, LinearLayout.LayoutParams(dp(64), dp(64)).apply {
-            marginEnd = dp(14)
+        header.addView(iconFrame, LinearLayout.LayoutParams(dp(64), dp(64)).apply {
+            marginEnd = dp(12)
         })
 
         val copy = LinearLayout(this).apply {
@@ -280,7 +278,7 @@ class MainActivity : ComponentActivity() {
         }
         copy.addView(TextView(this).apply {
             text = getString(R.string.app_name)
-            textSize = 23f
+            textSize = 22f
             setTextColor(palette.headerTextPrimary)
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
             includeFontPadding = false
@@ -292,16 +290,14 @@ class MainActivity : ComponentActivity() {
             setLineSpacing(0f, 1.15f)
             setPadding(0, dp(6), 0, 0)
         })
-        brandRow.addView(copy, LinearLayout.LayoutParams(
+        header.addView(copy, LinearLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             1f
         ))
-        header.addView(brandRow, matchWrap())
 
         val controls = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.VERTICAL
         }
         controls.addView(
             createHeaderToggle(
@@ -315,9 +311,7 @@ class MainActivity : ComponentActivity() {
                     recreate()
                 }
             },
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginEnd = dp(6)
-            }
+            matchWrap()
         )
 
         val englishSelected =
@@ -339,11 +333,16 @@ class MainActivity : ComponentActivity() {
                     recreate()
                 }
             },
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+            matchWrap().apply {
+                topMargin = dp(6)
+            }
+        )
+        header.addView(
+            controls,
+            LinearLayout.LayoutParams(dp(132), ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 marginStart = dp(6)
             }
         )
-        header.addView(controls, matchWrap().apply { topMargin = dp(11) })
 
         return header
     }
@@ -364,7 +363,7 @@ class MainActivity : ComponentActivity() {
 
         fun label(text: String, selected: Boolean) = TextView(this).apply {
             this.text = text
-            textSize = 10.5f
+            textSize = 9.5f
             isSingleLine = true
             gravity = Gravity.CENTER
             setTextColor(
@@ -417,9 +416,21 @@ class MainActivity : ComponentActivity() {
 
     private fun createConfigurationCard(): View {
         val card = card()
-        card.addView(sectionTitle(getString(R.string.configure_activity)))
-        card.addView(sectionSubtitle(getString(R.string.configure_subtitle)))
-        card.addView(space(20))
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        header.addView(
+            sectionTitle(getString(R.string.configure_activity)),
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        )
+        card.addView(header, matchWrap())
+
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        body.addView(sectionSubtitle(getString(R.string.configure_subtitle)))
+        body.addView(space(20))
 
         val endlessRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -461,9 +472,9 @@ class MainActivity : ComponentActivity() {
             }
         }
         endlessRow.addView(endlessSwitch)
-        card.addView(endlessRow, matchWrap())
+        body.addView(endlessRow, matchWrap())
 
-        card.addView(divider(), LinearLayout.LayoutParams(
+        body.addView(divider(), LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             dp(1)
         ).apply {
@@ -473,7 +484,7 @@ class MainActivity : ComponentActivity() {
 
         settingHeader(getString(R.string.speed)).also {
             selectedSpeedLabel = it.second
-            card.addView(it.first)
+            body.addView(it.first)
         }
         speedSeek = SeekBar(this).apply {
             max = WalkState.MAX_SPEED_KMH - WalkState.MIN_SPEED_KMH
@@ -483,8 +494,8 @@ class MainActivity : ComponentActivity() {
             setPadding(0, dp(4), 0, 0)
             contentDescription = getString(R.string.speed)
         }
-        card.addView(speedSeek, matchWrap())
-        card.addView(endpointRow(getString(R.string.speed_min), getString(R.string.speed_max)))
+        body.addView(speedSeek, matchWrap())
+        body.addView(endpointRow(getString(R.string.speed_min), getString(R.string.speed_max)))
 
         speedSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
@@ -498,7 +509,10 @@ class MainActivity : ComponentActivity() {
             }
         })
 
-        card.addView(divider(), LinearLayout.LayoutParams(
+        distanceSection = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        distanceSection.addView(divider(), LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             dp(1)
         ).apply {
@@ -508,7 +522,7 @@ class MainActivity : ComponentActivity() {
 
         settingHeader(getString(R.string.distance)).also {
             selectedDistanceLabel = it.second
-            card.addView(it.first)
+            distanceSection.addView(it.first)
         }
         distanceSeek = SeekBar(this).apply {
             max = 19
@@ -523,7 +537,7 @@ class MainActivity : ComponentActivity() {
             addView(distanceSeek, matchWrap())
             addView(endpointRow(getString(R.string.distance_min), getString(R.string.distance_max)))
         }
-        card.addView(distanceSliderGroup, matchWrap())
+        distanceSection.addView(distanceSliderGroup, matchWrap())
 
         distanceSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
@@ -561,7 +575,10 @@ class MainActivity : ComponentActivity() {
             isSingleLine = true
         }
         estimateRow.addView(estimatedTimeLabel)
-        card.addView(estimateRow, matchWrap().apply { topMargin = dp(18) })
+        distanceSection.addView(estimateRow, matchWrap().apply { topMargin = dp(18) })
+        body.addView(distanceSection, matchWrap())
+        card.addView(body, matchWrap())
+        addCollapseControl(header, body)
         return card
     }
 
@@ -583,8 +600,12 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.END
         }
         header.addView(activityState)
-        card.addView(header)
-        card.addView(space(18))
+        card.addView(header, matchWrap())
+
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        body.addView(space(18))
 
         val metrics = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -604,7 +625,7 @@ class MainActivity : ComponentActivity() {
             true
         )
         stepsValue = addMetricRow(metrics, getString(R.string.metric_steps), "0", false)
-        card.addView(metrics, matchWrap())
+        body.addView(metrics, matchWrap())
 
         activityProgress = ProgressBar(
             this,
@@ -616,7 +637,7 @@ class MainActivity : ComponentActivity() {
             progressTintList = ColorStateList.valueOf(palette.accent)
             progressBackgroundTintList = ColorStateList.valueOf(palette.progressTrack)
         }
-        card.addView(
+        body.addView(
             activityProgress,
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(7)).apply {
                 topMargin = dp(18)
@@ -634,7 +655,9 @@ class MainActivity : ComponentActivity() {
                 prepareActivityRun()
             }
         }
-        card.addView(actionButton, matchWrap())
+        body.addView(actionButton, matchWrap())
+        card.addView(body, matchWrap())
+        addCollapseControl(header, body)
         return card
     }
 
@@ -660,12 +683,13 @@ class MainActivity : ComponentActivity() {
             onClick = ::confirmClearHistory
         )
         header.addView(clearHistoryButton)
-        card.addView(header)
+        card.addView(header, matchWrap())
 
         historyList = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
         card.addView(historyList, matchWrap().apply { topMargin = dp(12) })
+        addCollapseControl(header, historyList)
         return card
     }
 
@@ -687,6 +711,7 @@ class MainActivity : ComponentActivity() {
                 textSize = 13f
                 setTextColor(palette.textMuted)
                 setPadding(0, dp(6), 0, dp(2))
+                gravity = Gravity.CENTER
             })
             return
         }
@@ -718,34 +743,22 @@ class MainActivity : ComponentActivity() {
                 orientation = LinearLayout.VERTICAL
                 setPadding(0, dp(12), 0, dp(12))
             }
-            val topRow = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-            }
             if (run.completed) {
-                topRow.addView(TextView(this).apply {
+                entry.addView(TextView(this).apply {
                     text = getString(R.string.history_completed)
                     textSize = 13f
                     setTextColor(palette.success)
                     typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                }, LinearLayout.LayoutParams(
-                    0,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    1f
-                ))
-            } else {
-                topRow.addView(
-                    View(this),
-                    LinearLayout.LayoutParams(0, 1, 1f)
-                )
+                    gravity = Gravity.CENTER
+                }, matchWrap())
             }
-            topRow.addView(TextView(this).apply {
+            entry.addView(TextView(this).apply {
                 text = dateFormat.format(run.timestampMillis)
                 textSize = 11f
                 setTextColor(palette.textMuted)
-                gravity = Gravity.END
-            })
-            entry.addView(topRow)
+                gravity = Gravity.CENTER
+                setPadding(0, if (run.completed) dp(4) else 0, 0, 0)
+            }, matchWrap())
             entry.addView(TextView(this).apply {
                 text = getString(
                     R.string.history_metrics,
@@ -756,7 +769,8 @@ class MainActivity : ComponentActivity() {
                 textSize = 13f
                 setTextColor(palette.textPrimary)
                 setPadding(0, dp(5), 0, 0)
-            })
+                gravity = Gravity.CENTER
+            }, matchWrap())
             historyList.addView(entry)
         }
     }
@@ -779,6 +793,47 @@ class MainActivity : ComponentActivity() {
         setPadding(dp(20), dp(20), dp(20), dp(20))
         background = roundedDrawable(palette.surface, 20, palette.border)
         elevation = 0f
+    }
+
+    private fun addCollapseControl(header: LinearLayout, content: View) {
+        var expanded = true
+        val toggle = Button(this).apply {
+            textSize = 11f
+            isAllCaps = false
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = dp(38)
+            minimumHeight = dp(38)
+            setPadding(0, 0, 0, 0)
+            setTextColor(palette.accentStrong)
+            stateListAnimator = null
+            elevation = 0f
+            background = statefulRoundedDrawable(
+                normalColor = palette.accentSoft,
+                pressedColor = palette.headerControlBackground,
+                radiusDp = 12
+            )
+        }
+
+        fun updateCollapseState() {
+            content.visibility = if (expanded) View.VISIBLE else View.GONE
+            toggle.text = if (expanded) "▲" else "▼"
+            toggle.contentDescription = getString(
+                if (expanded) R.string.collapse_card else R.string.expand_card
+            )
+        }
+
+        toggle.setOnClickListener {
+            expanded = !expanded
+            updateCollapseState()
+        }
+        header.addView(
+            toggle,
+            LinearLayout.LayoutParams(dp(38), dp(38)).apply {
+                marginStart = dp(8)
+            }
+        )
+        updateCollapseState()
     }
 
     private fun compactButton(
@@ -1003,7 +1058,7 @@ class MainActivity : ComponentActivity() {
             formatEstimatedDuration(WalkState.calculateDurationMs(selectedKm, selectedSpeedKmh))
         }
         val running = WalkState.isRunning(this)
-        distanceSliderGroup.visibility = if (selectedEndless) View.GONE else View.VISIBLE
+        distanceSection.visibility = if (selectedEndless) View.GONE else View.VISIBLE
         distanceSeek.isEnabled = !running
         distanceSeek.alpha = if (distanceSeek.isEnabled) 1f else 0.45f
         if (!WalkState.isRunning(this)) {
@@ -1086,7 +1141,7 @@ class MainActivity : ComponentActivity() {
             updateSelectedConfigText()
         }
 
-        distanceSliderGroup.visibility = if (selectedEndless) View.GONE else View.VISIBLE
+        distanceSection.visibility = if (selectedEndless) View.GONE else View.VISIBLE
         distanceSeek.isEnabled = !running
         distanceSeek.alpha = if (distanceSeek.isEnabled) 1f else 0.45f
         speedSeek.isEnabled = !running
@@ -1115,22 +1170,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun formatDuration(totalSeconds: Long): String {
-        return if (totalSeconds >= 3_600L) {
-            String.format(
-                Locale.getDefault(),
-                "%02d:%02d:%02d",
-                totalSeconds / 3_600L,
-                (totalSeconds % 3_600L) / 60L,
-                totalSeconds % 60L
-            )
-        } else {
-            String.format(
-                Locale.getDefault(),
-                "%02d:%02d",
-                totalSeconds / 60L,
-                totalSeconds % 60L
-            )
-        }
+        return String.format(
+            Locale.getDefault(),
+            "%02d:%02d",
+            totalSeconds / 3_600L,
+            (totalSeconds % 3_600L) / 60L
+        )
     }
 
     private fun formatEstimatedDuration(durationMs: Long): String {
