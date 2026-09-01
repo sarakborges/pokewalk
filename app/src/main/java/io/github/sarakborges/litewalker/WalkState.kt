@@ -28,9 +28,6 @@ object WalkState {
     private const val KEY_TARGET_SPEED = "target_speed_kmh"
     private const val KEY_PREFERRED_SPEED = "preferred_speed_kmh"
     private const val KEY_STEP_PLAN = "step_plan"
-    private const val KEY_FINAL_DURATION = "final_duration"
-    private const val KEY_FINAL_DISTANCE = "final_distance"
-    private const val KEY_FINAL_STEPS = "final_steps"
     private const val KEY_NOTIFIED_KM = "notified_km"
     private const val KEY_RUN_HISTORY = "run_history"
     private const val MAX_RUN_HISTORY = 5
@@ -42,10 +39,12 @@ object WalkState {
     )
 
     data class RunEntry(
-        val timestampMillis: Long,
+        val startedAtMillis: Long,
+        val endedAtMillis: Long,
         val durationMs: Long,
         val distanceMeters: Double,
         val steps: Long,
+        val speedKmh: Int,
         val completed: Boolean
     )
 
@@ -83,9 +82,6 @@ object WalkState {
             .putInt(KEY_TARGET_SPEED, safeSpeed)
             .putInt(KEY_PREFERRED_SPEED, safeSpeed)
             .putString(KEY_STEP_PLAN, stepPlan.joinToString(","))
-            .putLong(KEY_FINAL_DURATION, 0L)
-            .putString(KEY_FINAL_DISTANCE, "0")
-            .putLong(KEY_FINAL_STEPS, 0L)
             .putInt(KEY_NOTIFIED_KM, 0)
             .remove(KEY_ERROR)
             .apply()
@@ -311,8 +307,7 @@ object WalkState {
             durationMs = totalDurationMs(context),
             distanceMeters = targetDistanceMeters(context),
             steps = stepPlan(context).sumOf { it.toLong() },
-            finished = true,
-            stopped = false
+            finished = true
         )
     }
 
@@ -331,8 +326,7 @@ object WalkState {
                 distanceMeters.coerceIn(0.0, targetDistanceMeters(context))
             },
             steps = steps.coerceAtLeast(0L),
-            finished = false,
-            stopped = true
+            finished = false
         )
     }
 
@@ -341,31 +335,47 @@ object WalkState {
         durationMs: Long,
         distanceMeters: Double,
         steps: Long,
-        finished: Boolean,
-        stopped: Boolean
+        finished: Boolean
     ) {
-        prefs(context).edit()
-            .putBoolean(KEY_RUNNING, false)
-            .putBoolean(KEY_FINISHED, finished)
-            .putBoolean(KEY_STOPPED, stopped)
-            .putLong(KEY_FINAL_DURATION, durationMs)
-            .putString(KEY_FINAL_DISTANCE, distanceMeters.toString())
-            .putLong(KEY_FINAL_STEPS, steps)
-            .remove(KEY_ERROR)
-            .apply()
-
+        val endedAtMillis = System.currentTimeMillis()
+        val fallbackStartMillis = (endedAtMillis - durationMs).coerceAtLeast(0L)
+        val startedAtMillis = startTimeMillis(context)
+            .takeIf { it in 1L..endedAtMillis }
+            ?: fallbackStartMillis
         if (durationMs > 0L || distanceMeters > 0.0 || steps > 0L) {
             addRunToHistory(
                 context,
                 RunEntry(
-                    timestampMillis = System.currentTimeMillis(),
+                    startedAtMillis = startedAtMillis,
+                    endedAtMillis = endedAtMillis,
                     durationMs = durationMs,
                     distanceMeters = distanceMeters,
                     steps = steps,
+                    speedKmh = targetSpeedKmh(context),
                     completed = finished
                 )
             )
         }
+        clearCurrentRun(context)
+    }
+
+    private fun clearCurrentRun(context: Context) {
+        prefs(context).edit()
+            .remove(KEY_RUNNING)
+            .remove(KEY_START_TIME)
+            .remove(KEY_COMPLETED_CHUNKS)
+            .remove(KEY_FINISHED)
+            .remove(KEY_STOPPED)
+            .remove(KEY_ERROR)
+            .remove(KEY_TARGET_KM)
+            .remove(KEY_ENDLESS)
+            .remove(KEY_TARGET_SPEED)
+            .remove(KEY_STEP_PLAN)
+            .remove("final_duration")
+            .remove("final_distance")
+            .remove("final_steps")
+            .remove(KEY_NOTIFIED_KM)
+            .apply()
     }
 
     fun recentRuns(context: Context): List<RunEntry> =
@@ -386,37 +396,59 @@ object WalkState {
     }
 
     private fun encodeRun(run: RunEntry): String = listOf(
-        run.timestampMillis,
+        run.startedAtMillis,
+        run.endedAtMillis,
         run.durationMs,
         run.distanceMeters,
         run.steps,
+        run.speedKmh,
         if (run.completed) 1 else 0
     ).joinToString("|")
 
     private fun decodeRun(value: String): RunEntry? {
         val fields = value.split('|')
-        if (fields.size != 5) return null
-        return RunEntry(
-            timestampMillis = fields[0].toLongOrNull() ?: return null,
-            durationMs = fields[1].toLongOrNull() ?: return null,
-            distanceMeters = fields[2].toDoubleOrNull() ?: return null,
-            steps = fields[3].toLongOrNull() ?: return null,
-            completed = fields[4] == "1"
-        )
+        return when (fields.size) {
+            7 -> RunEntry(
+                startedAtMillis = fields[0].toLongOrNull() ?: return null,
+                endedAtMillis = fields[1].toLongOrNull() ?: return null,
+                durationMs = fields[2].toLongOrNull() ?: return null,
+                distanceMeters = fields[3].toDoubleOrNull() ?: return null,
+                steps = fields[4].toLongOrNull() ?: return null,
+                speedKmh = fields[5].toIntOrNull()
+                    ?.coerceIn(MIN_SPEED_KMH, MAX_SPEED_KMH)
+                    ?: return null,
+                completed = fields[6] == "1"
+            )
+
+            5 -> {
+                val endedAtMillis = fields[0].toLongOrNull() ?: return null
+                val durationMs = fields[1].toLongOrNull() ?: return null
+                val distanceMeters = fields[2].toDoubleOrNull() ?: return null
+                RunEntry(
+                    startedAtMillis = (endedAtMillis - durationMs).coerceAtLeast(0L),
+                    endedAtMillis = endedAtMillis,
+                    durationMs = durationMs,
+                    distanceMeters = distanceMeters,
+                    steps = fields[3].toLongOrNull() ?: return null,
+                    speedKmh = inferSpeedKmh(distanceMeters, durationMs),
+                    completed = fields[4] == "1"
+                )
+            }
+
+            else -> null
+        }
     }
 
-    fun finalMetrics(context: Context): Metrics = Metrics(
-        durationMs = prefs(context).getLong(KEY_FINAL_DURATION, 0L),
-        distanceMeters = prefs(context).getString(KEY_FINAL_DISTANCE, "0")
-            ?.toDoubleOrNull() ?: 0.0,
-        steps = prefs(context).getLong(KEY_FINAL_STEPS, 0L)
-    )
+    private fun inferSpeedKmh(distanceMeters: Double, durationMs: Long): Int {
+        if (durationMs <= 0L) return DEFAULT_SPEED_KMH
+        return (distanceMeters * 3_600.0 / durationMs.toDouble())
+            .roundToInt()
+            .coerceIn(MIN_SPEED_KMH, MAX_SPEED_KMH)
+    }
 
     fun fail(context: Context, message: String) {
+        clearCurrentRun(context)
         prefs(context).edit()
-            .putBoolean(KEY_RUNNING, false)
-            .putBoolean(KEY_FINISHED, false)
-            .putBoolean(KEY_STOPPED, false)
             .putString(KEY_ERROR, message)
             .apply()
     }
@@ -436,14 +468,6 @@ object WalkState {
 
     fun completedChunks(context: Context): Int =
         prefs(context).getInt(KEY_COMPLETED_CHUNKS, 0).coerceIn(0, chunkCount(context))
-
-    fun isFinished(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_FINISHED, false)
-
-    fun isStopped(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_STOPPED, false)
-
-    fun hasResult(context: Context): Boolean = isFinished(context) || isStopped(context)
 
     fun error(context: Context): String? = prefs(context).getString(KEY_ERROR, null)
 

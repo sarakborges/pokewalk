@@ -2,21 +2,25 @@
 
 Aplicativo Android para acompanhar caminhadas planejadas e registrar estimativas de passos e distância no Health Connect.
 
-Versão atual: **v1.1.0** (`versionCode 10100`).
+Versão atual: **v1.1.8** (`versionCode 10108`).
 
 ## Destaques
 
-- cabeçalho fixo e interface limpa para escolher velocidade e distância;
+- cabeçalho fixo com seletores de tema e idioma compactos, sem fundo, empilhados à direita;
+- paleta inspirada na Master Ball, em roxo com detalhes vermelhos;
 - modos claro e escuro, com seleção persistente;
 - interface completa em português do Brasil e inglês dos Estados Unidos;
 - modo sem limite, que continua até a atividade ser encerrada manualmente;
-- acompanhamento de tempo, distância, passos estimados e progresso;
-- cancelamento com salvamento do progresso já realizado;
-- histórico local das cinco atividades mais recentes, com opção de limpeza;
-- notificações durante a atividade, a cada quilômetro e ao concluir;
+- distância e duração estimada ocultas automaticamente no modo sem limite;
+- cards que podem ser recolhidos e expandidos individualmente, com o estado de cada um preservado ao reabrir o app;
+- acompanhamento do horário de início, velocidade atual, tempo em `HH:MM:SS`, distância, passos estimados e progresso;
+- encerramento com salvamento do progresso já realizado e limpeza do painel atual;
+- encerramento resiliente mesmo após recriação do serviço pelo Android ou em exercícios longos;
+- histórico local compacto dos cinco exercícios mais recentes, com distância, duração em `HH:MM`, velocidade e passos em duas linhas à esquerda, além de início e fim um acima do outro à direita;
+- notificações durante o exercício e a cada quilômetro, sem notificação adicional ao encerrar;
 - versão fixada no rodapé;
-- política de privacidade acessível dentro do app;
-- identidade própria, com a silhueta de um aventureiro caminhando e área segura ampliada no ícone.
+- botões dedicados para novidades e política de privacidade;
+- identidade própria, com a mesma silhueta branca e sombra preta no launcher e no cabeçalho.
 
 ## Requisitos
 
