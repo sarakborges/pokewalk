@@ -13,6 +13,7 @@ import android.graphics.drawable.StateListDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -716,8 +717,11 @@ class MainActivity : ComponentActivity() {
         }
 
         val locale = resources.configuration.locales[0]
-        val dateFormat = DateFormat.getDateInstance(DateFormat.SHORT, locale)
-        val timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, locale)
+        val dateTimeFormat = DateFormat.getDateTimeInstance(
+            DateFormat.SHORT,
+            DateFormat.SHORT,
+            locale
+        )
         val distanceFormat = NumberFormat.getNumberInstance(locale).apply {
             minimumFractionDigits = 2
             maximumFractionDigits = 2
@@ -761,34 +765,30 @@ class MainActivity : ComponentActivity() {
                     formatDuration(run.durationMs / 1_000L),
                     integerFormat.format(run.steps)
                 )
-                textSize = 12.5f
+                textSize = 11.5f
                 setTextColor(palette.textPrimary)
                 setPadding(0, if (run.completed) dp(4) else 0, 0, 0)
+                isSingleLine = true
+                setAutoSizeTextTypeUniformWithConfiguration(
+                    9,
+                    12,
+                    1,
+                    TypedValue.COMPLEX_UNIT_SP
+                )
             }, matchWrap())
             entry.addView(
                 details,
                 LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             )
 
-            val timestamp = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.END or Gravity.CENTER_VERTICAL
+            entry.addView(TextView(this).apply {
+                text = dateTimeFormat.format(run.timestampMillis)
+                textSize = 9.5f
+                setTextColor(palette.textMuted)
+                gravity = Gravity.END
                 setPadding(dp(12), 0, 0, 0)
-            }
-            timestamp.addView(TextView(this).apply {
-                text = dateFormat.format(run.timestampMillis)
-                textSize = 10.5f
-                setTextColor(palette.textMuted)
-                gravity = Gravity.END
+                isSingleLine = true
             })
-            timestamp.addView(TextView(this).apply {
-                text = timeFormat.format(run.timestampMillis)
-                textSize = 10.5f
-                setTextColor(palette.textMuted)
-                gravity = Gravity.END
-                setPadding(0, dp(2), 0, 0)
-            })
-            entry.addView(timestamp)
             historyList.addView(entry)
         }
     }

@@ -16,7 +16,7 @@ Versão atual: **v1.1.6** (`versionCode 10106`).
 - acompanhamento de tempo, distância, passos estimados e progresso;
 - encerramento com salvamento do progresso já realizado e limpeza do painel atual;
 - tempo do exercício atual e do histórico no formato `HH:MM`;
-- histórico local dos cinco exercícios mais recentes, com detalhes à esquerda e data/hora à direita alinhados pelo centro vertical;
+- histórico local dos cinco exercícios mais recentes, com detalhes à esquerda e data/hora em uma linha à direita, alinhados pelo centro vertical;
 - notificações durante o exercício e a cada quilômetro, sem notificação adicional ao encerrar;
 - versão fixada no rodapé;
 - botões dedicados para novidades e política de privacidade;
