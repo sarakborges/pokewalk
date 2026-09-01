@@ -24,22 +24,24 @@
     <string name="distance_max">20 km</string>
     <string name="estimated_time">ESTIMATED DURATION</string>
     <string name="activity_title">Current workout</string>
+    <string name="metric_started_at">STARTED AT</string>
+    <string name="metric_current_speed">CURRENT SPEED</string>
+    <string name="metric_empty">—</string>
     <string name="metric_time">TIME</string>
     <string name="metric_distance">DISTANCE</string>
     <string name="metric_steps">STEPS</string>
     <string name="start_distance">Start a %1$d km workout</string>
     <string name="start_endless">Start endless workout</string>
     <string name="cancel_activity">End workout</string>
-    <string name="status_in_progress">Active</string>
-    <string name="status_endless">Endless</string>
-    <string name="status_ready">Ready</string>
 
     <string name="history_title">Recent workouts</string>
     <string name="clear_history">Clear</string>
     <string name="clear_history_description">Clear recent workout history</string>
     <string name="history_empty">Your five most recent workouts will show up here.</string>
-    <string name="history_completed">Completed</string>
-    <string name="history_metrics">%1$s km • %2$s • %3$s steps</string>
+    <string name="history_metrics_primary">%1$s km • %2$s</string>
+    <string name="history_metrics_secondary">%1$d km/h • %2$s steps</string>
+    <string name="history_started_at">Started: %1$s</string>
+    <string name="history_ended_at">Ended: %1$s</string>
     <string name="clear_history_title">Clear recent workouts?</string>
     <string name="clear_history_message">This clears the five workouts stored on this device. It won’t remove anything from Health Connect.</string>
     <string name="clear_history_confirm">Clear</string>
@@ -56,7 +58,7 @@
     <string name="changelog">Changelog</string>
     <string name="changelog_description">Open version history</string>
     <string name="changelog_title">What’s new</string>
-    <string name="changelog_text">v1.1.7\n• Makes End workout reliable even after Android recreates the service or during a long workout\n• Compacts recent workout entries\n• Shows current workout time as HH:MM:SS\n• Removes the backgrounds behind the header toggles\n\nv1.1.6\n• Vertically aligns each history entry while keeping details left and date/time together on the right\n\nv1.1.5\n• Added controls to collapse and expand each card\n• Hides distance and estimated duration during endless workouts\n• Displays current and historical workout time as HH:MM\n• Stacks theme and language controls on the right side of the header\n\nv1.1.4\n• Restored Clear to its compact position beside the history title\n• Gave Clear the same filled button style as the other actions, in red\n\nv1.1.3\n• Removed the Saved label from interrupted workout history\n\nv1.1.2\n• Refined Brazilian Portuguese copy\n• Hides the distance slider during endless workouts\n• Matches the launcher and header icons\n• Uses flat cards and clearer action buttons\n• Resets current workout data when it ends\n• Removes end-of-workout notifications\n\nv1.1.1\n• Introduced the purple and red visual theme\n• Added a larger header icon and two-sided toggles\n• Consolidated workout metrics into one compact card\n\nv1.1.0\n• Added endless workouts and kilometer alerts\n• Added light/dark themes, PT-BR/EN-US, and recent workout history</string>
+    <string name="changelog_text">v1.1.8\n• Adds workout start and end times plus speed to recent workouts\n• Organizes history details into two compact lines\n• Adds Started at and Current speed to the current workout\n• Remembers whether each card is expanded or collapsed\n• Removes the workout status labels\n• Brings header toggle labels closer and enlarges the purple chevrons\n• Keeps End workout fully vivid\n\nv1.1.7\n• Makes End workout reliable even after Android recreates the service or during a long workout\n• Compacts recent workout entries\n• Shows current workout time as HH:MM:SS\n• Removes the backgrounds behind the header toggles\n\nv1.1.6\n• Vertically aligns each history entry while keeping details left and date/time together on the right\n\nv1.1.5\n• Added controls to collapse and expand each card\n• Hides distance and estimated duration during endless workouts\n• Displays current and historical workout time as HH:MM\n• Stacks theme and language controls on the right side of the header\n\nv1.1.4\n• Restored Clear to its compact position beside the history title\n• Gave Clear the same filled button style as the other actions, in red\n\nv1.1.3\n• Removed the Saved label from interrupted workout history\n\nv1.1.2\n• Refined Brazilian Portuguese copy\n• Hides the distance slider during endless workouts\n• Matches the launcher and header icons\n• Uses flat cards and clearer action buttons\n• Resets current workout data when it ends\n• Removes end-of-workout notifications\n\nv1.1.1\n• Introduced the purple and red visual theme\n• Added a larger header icon and two-sided toggles\n• Consolidated workout metrics into one compact card\n\nv1.1.0\n• Added endless workouts and kilometer alerts\n• Added light/dark themes, PT-BR/EN-US, and recent workout history</string>
 
     <string name="privacy">Privacy</string>
     <string name="privacy_description">Open privacy policy</string>

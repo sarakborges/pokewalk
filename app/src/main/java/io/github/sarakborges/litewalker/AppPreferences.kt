@@ -7,10 +7,14 @@ import java.util.Locale
 object AppPreferences {
     const val LANGUAGE_PT_BR = "pt-BR"
     const val LANGUAGE_EN_US = "en-US"
+    const val CARD_CONFIGURATION = "configuration"
+    const val CARD_CURRENT_WORKOUT = "current_workout"
+    const val CARD_HISTORY = "history"
 
     private const val PREFS = "litewalker_preferences"
     private const val KEY_DARK_MODE = "dark_mode"
     private const val KEY_LANGUAGE = "language"
+    private const val KEY_CARD_EXPANDED_PREFIX = "card_expanded_"
 
     fun isDarkMode(context: Context): Boolean =
         prefs(context).getBoolean(KEY_DARK_MODE, false)
@@ -31,6 +35,15 @@ object AppPreferences {
             LANGUAGE_PT_BR
         }
         prefs(context).edit().putString(KEY_LANGUAGE, supported).apply()
+    }
+
+    fun isCardExpanded(context: Context, card: String): Boolean =
+        prefs(context).getBoolean(KEY_CARD_EXPANDED_PREFIX + card, true)
+
+    fun setCardExpanded(context: Context, card: String, expanded: Boolean) {
+        prefs(context).edit()
+            .putBoolean(KEY_CARD_EXPANDED_PREFIX + card, expanded)
+            .apply()
     }
 
     fun localizedContext(context: Context): Context {

@@ -39,10 +39,12 @@ object WalkState {
     )
 
     data class RunEntry(
-        val timestampMillis: Long,
+        val startedAtMillis: Long,
+        val endedAtMillis: Long,
         val durationMs: Long,
         val distanceMeters: Double,
         val steps: Long,
+        val speedKmh: Int,
         val completed: Boolean
     )
 
@@ -335,14 +337,21 @@ object WalkState {
         steps: Long,
         finished: Boolean
     ) {
+        val endedAtMillis = System.currentTimeMillis()
+        val fallbackStartMillis = (endedAtMillis - durationMs).coerceAtLeast(0L)
+        val startedAtMillis = startTimeMillis(context)
+            .takeIf { it in 1L..endedAtMillis }
+            ?: fallbackStartMillis
         if (durationMs > 0L || distanceMeters > 0.0 || steps > 0L) {
             addRunToHistory(
                 context,
                 RunEntry(
-                    timestampMillis = System.currentTimeMillis(),
+                    startedAtMillis = startedAtMillis,
+                    endedAtMillis = endedAtMillis,
                     durationMs = durationMs,
                     distanceMeters = distanceMeters,
                     steps = steps,
+                    speedKmh = targetSpeedKmh(context),
                     completed = finished
                 )
             )
@@ -387,23 +396,54 @@ object WalkState {
     }
 
     private fun encodeRun(run: RunEntry): String = listOf(
-        run.timestampMillis,
+        run.startedAtMillis,
+        run.endedAtMillis,
         run.durationMs,
         run.distanceMeters,
         run.steps,
+        run.speedKmh,
         if (run.completed) 1 else 0
     ).joinToString("|")
 
     private fun decodeRun(value: String): RunEntry? {
         val fields = value.split('|')
-        if (fields.size != 5) return null
-        return RunEntry(
-            timestampMillis = fields[0].toLongOrNull() ?: return null,
-            durationMs = fields[1].toLongOrNull() ?: return null,
-            distanceMeters = fields[2].toDoubleOrNull() ?: return null,
-            steps = fields[3].toLongOrNull() ?: return null,
-            completed = fields[4] == "1"
-        )
+        return when (fields.size) {
+            7 -> RunEntry(
+                startedAtMillis = fields[0].toLongOrNull() ?: return null,
+                endedAtMillis = fields[1].toLongOrNull() ?: return null,
+                durationMs = fields[2].toLongOrNull() ?: return null,
+                distanceMeters = fields[3].toDoubleOrNull() ?: return null,
+                steps = fields[4].toLongOrNull() ?: return null,
+                speedKmh = fields[5].toIntOrNull()
+                    ?.coerceIn(MIN_SPEED_KMH, MAX_SPEED_KMH)
+                    ?: return null,
+                completed = fields[6] == "1"
+            )
+
+            5 -> {
+                val endedAtMillis = fields[0].toLongOrNull() ?: return null
+                val durationMs = fields[1].toLongOrNull() ?: return null
+                val distanceMeters = fields[2].toDoubleOrNull() ?: return null
+                RunEntry(
+                    startedAtMillis = (endedAtMillis - durationMs).coerceAtLeast(0L),
+                    endedAtMillis = endedAtMillis,
+                    durationMs = durationMs,
+                    distanceMeters = distanceMeters,
+                    steps = fields[3].toLongOrNull() ?: return null,
+                    speedKmh = inferSpeedKmh(distanceMeters, durationMs),
+                    completed = fields[4] == "1"
+                )
+            }
+
+            else -> null
+        }
+    }
+
+    private fun inferSpeedKmh(distanceMeters: Double, durationMs: Long): Int {
+        if (durationMs <= 0L) return DEFAULT_SPEED_KMH
+        return (distanceMeters * 3_600.0 / durationMs.toDouble())
+            .roundToInt()
+            .coerceIn(MIN_SPEED_KMH, MAX_SPEED_KMH)
     }
 
     fun fail(context: Context, message: String) {

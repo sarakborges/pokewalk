@@ -24,22 +24,24 @@
     <string name="distance_max">20 km</string>
     <string name="estimated_time">DURAÇÃO ESTIMADA</string>
     <string name="activity_title">Exercício atual</string>
+    <string name="metric_started_at">INICIADO EM</string>
+    <string name="metric_current_speed">VELOCIDADE ATUAL</string>
+    <string name="metric_empty">—</string>
     <string name="metric_time">TEMPO</string>
     <string name="metric_distance">DISTÂNCIA</string>
     <string name="metric_steps">PASSOS</string>
     <string name="start_distance">Iniciar exercício de %1$d km</string>
     <string name="start_endless">Iniciar modo sem limite</string>
     <string name="cancel_activity">Encerrar exercício</string>
-    <string name="status_in_progress">Em andamento</string>
-    <string name="status_endless">Sem limite</string>
-    <string name="status_ready">Pronto</string>
 
     <string name="history_title">Exercícios recentes</string>
     <string name="clear_history">Limpar</string>
     <string name="clear_history_description">Limpar o histórico de exercícios recentes</string>
     <string name="history_empty">Seus cinco exercícios mais recentes aparecerão aqui.</string>
-    <string name="history_completed">Concluído</string>
-    <string name="history_metrics">%1$s km • %2$s • %3$s passos</string>
+    <string name="history_metrics_primary">%1$s km • %2$s</string>
+    <string name="history_metrics_secondary">%1$d km/h • %2$s passos</string>
+    <string name="history_started_at">Início: %1$s</string>
+    <string name="history_ended_at">Fim: %1$s</string>
     <string name="clear_history_title">Limpar exercícios recentes?</string>
     <string name="clear_history_message">Isso apaga os cinco exercícios salvos neste aparelho. Nada será removido do Health Connect.</string>
     <string name="clear_history_confirm">Limpar</string>
@@ -56,7 +58,7 @@
     <string name="changelog">Novidades</string>
     <string name="changelog_description">Abrir histórico de versões</string>
     <string name="changelog_title">O que há de novo</string>
-    <string name="changelog_text">v1.1.7\n• O botão Encerrar exercício volta a funcionar mesmo após o Android recriar o serviço ou em exercícios longos\n• Registros recentes mais compactos\n• Tempo do exercício atual exibido em HH:MM:SS\n• Fundos dos seletores do cabeçalho removidos\n\nv1.1.6\n• Registros do histórico alinhados pelo centro vertical, com detalhes à esquerda e data/hora juntas à direita\n\nv1.1.5\n• Controles para recolher e expandir cada card\n• Distância e duração estimada ocultas no modo sem limite\n• Tempo do exercício atual e do histórico exibido em HH:MM\n• Seletores de tema e idioma empilhados à direita no cabeçalho\n\nv1.1.4\n• O botão Limpar voltou à posição compacta ao lado do título do histórico\n• Limpar agora tem o mesmo visual preenchido dos demais botões, em vermelho\n\nv1.1.3\n• O texto Salvo foi removido do histórico de exercícios interrompidos\n\nv1.1.2\n• Textos em português revisados\n• O controle de distância some no modo sem limite\n• O launcher agora usa o mesmo ícone do cabeçalho\n• Cards planos e botões de ação mais claros\n• O painel atual é zerado ao encerrar o exercício\n• A notificação de encerramento foi removida\n\nv1.1.1\n• Nova identidade visual em roxo e vermelho\n• Ícone maior no cabeçalho e seletores com texto dos dois lados\n• Métricas reunidas em um único card compacto\n\nv1.1.0\n• Modo sem limite e alertas por quilômetro\n• Temas claro/escuro, PT-BR/EN-US e histórico de exercícios recentes</string>
+    <string name="changelog_text">v1.1.8\n• Horários de início e encerramento e velocidade adicionados aos exercícios recentes\n• Informações do histórico organizadas em duas linhas compactas\n• Horário de início e velocidade atual adicionados ao exercício atual\n• O estado recolhido ou expandido de cada card agora é lembrado\n• Rótulos de estado removidos do exercício atual\n• Textos dos seletores do cabeçalho mais próximos e chevrons roxos maiores\n• O botão Encerrar exercício permanece com cor plena\n\nv1.1.7\n• O botão Encerrar exercício volta a funcionar mesmo após o Android recriar o serviço ou em exercícios longos\n• Registros recentes mais compactos\n• Tempo do exercício atual exibido em HH:MM:SS\n• Fundos dos seletores do cabeçalho removidos\n\nv1.1.6\n• Registros do histórico alinhados pelo centro vertical, com detalhes à esquerda e data/hora juntas à direita\n\nv1.1.5\n• Controles para recolher e expandir cada card\n• Distância e duração estimada ocultas no modo sem limite\n• Tempo do exercício atual e do histórico exibido em HH:MM\n• Seletores de tema e idioma empilhados à direita no cabeçalho\n\nv1.1.4\n• O botão Limpar voltou à posição compacta ao lado do título do histórico\n• Limpar agora tem o mesmo visual preenchido dos demais botões, em vermelho\n\nv1.1.3\n• O texto Salvo foi removido do histórico de exercícios interrompidos\n\nv1.1.2\n• Textos em português revisados\n• O controle de distância some no modo sem limite\n• O launcher agora usa o mesmo ícone do cabeçalho\n• Cards planos e botões de ação mais claros\n• O painel atual é zerado ao encerrar o exercício\n• A notificação de encerramento foi removida\n\nv1.1.1\n• Nova identidade visual em roxo e vermelho\n• Ícone maior no cabeçalho e seletores com texto dos dois lados\n• Métricas reunidas em um único card compacto\n\nv1.1.0\n• Modo sem limite e alertas por quilômetro\n• Temas claro/escuro, PT-BR/EN-US e histórico de exercícios recentes</string>
 
     <string name="privacy">Privacidade</string>
     <string name="privacy_description">Abrir política de privacidade</string>

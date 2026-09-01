@@ -20,6 +20,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
@@ -58,7 +59,8 @@ class MainActivity : ComponentActivity() {
     private var ticker: Job? = null
 
     private lateinit var actionButton: Button
-    private lateinit var activityState: TextView
+    private lateinit var startedAtValue: TextView
+    private lateinit var currentSpeedValue: TextView
     private lateinit var elapsedValue: TextView
     private lateinit var distanceValue: TextView
     private lateinit var stepsValue: TextView
@@ -311,8 +313,7 @@ class MainActivity : ComponentActivity() {
                     AppPreferences.setDarkMode(this@MainActivity, checked)
                     recreate()
                 }
-            },
-            matchWrap()
+            }
         )
 
         val englishSelected =
@@ -334,13 +335,19 @@ class MainActivity : ComponentActivity() {
                     recreate()
                 }
             },
-            matchWrap().apply {
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
                 topMargin = dp(2)
             }
         )
         header.addView(
             controls,
-            LinearLayout.LayoutParams(dp(124), ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
                 marginStart = dp(6)
             }
         )
@@ -374,10 +381,7 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        group.addView(
-            label(leftText, !checked),
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        )
+        group.addView(label(leftText, !checked))
         group.addView(Switch(this).apply {
             isChecked = checked
             text = ""
@@ -402,14 +406,11 @@ class MainActivity : ComponentActivity() {
                 intArrayOf(palette.accent, palette.headerToggleTrack)
             )
             setOnCheckedChangeListener { _, value -> onCheckedChanged(value) }
-        }, LinearLayout.LayoutParams(dp(48), dp(32)).apply {
-            marginStart = dp(2)
-            marginEnd = dp(2)
+        }, LinearLayout.LayoutParams(dp(44), dp(30)).apply {
+            marginStart = dp(1)
+            marginEnd = dp(1)
         })
-        group.addView(
-            label(rightText, checked),
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        )
+        group.addView(label(rightText, checked))
         return group
     }
 
@@ -577,7 +578,7 @@ class MainActivity : ComponentActivity() {
         distanceSection.addView(estimateRow, matchWrap().apply { topMargin = dp(18) })
         body.addView(distanceSection, matchWrap())
         card.addView(body, matchWrap())
-        addCollapseControl(header, body)
+        addCollapseControl(header, body, AppPreferences.CARD_CONFIGURATION)
         return card
     }
 
@@ -592,13 +593,6 @@ class MainActivity : ComponentActivity() {
             ViewGroup.LayoutParams.WRAP_CONTENT,
             1f
         ))
-        activityState = TextView(this).apply {
-            textSize = 12f
-            setTextColor(palette.accentStrong)
-            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            gravity = Gravity.END
-        }
-        header.addView(activityState)
         card.addView(header, matchWrap())
 
         val body = LinearLayout(this).apply {
@@ -611,6 +605,26 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(14), dp(5), dp(14), dp(5))
             background = roundedDrawable(palette.metricBackground, 14)
         }
+        startedAtValue = addMetricRow(
+            metrics,
+            getString(R.string.metric_started_at),
+            getString(R.string.metric_empty),
+            true
+        ).apply {
+            textSize = 12f
+            setAutoSizeTextTypeUniformWithConfiguration(
+                9,
+                12,
+                1,
+                TypedValue.COMPLEX_UNIT_SP
+            )
+        }
+        currentSpeedValue = addMetricRow(
+            metrics,
+            getString(R.string.metric_current_speed),
+            "$selectedSpeedKmh km/h",
+            true
+        )
         elapsedValue = addMetricRow(
             metrics,
             getString(R.string.metric_time),
@@ -656,7 +670,7 @@ class MainActivity : ComponentActivity() {
         }
         body.addView(actionButton, matchWrap())
         card.addView(body, matchWrap())
-        addCollapseControl(header, body)
+        addCollapseControl(header, body, AppPreferences.CARD_CURRENT_WORKOUT)
         return card
     }
 
@@ -688,14 +702,15 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
         }
         card.addView(historyList, matchWrap().apply { topMargin = dp(12) })
-        addCollapseControl(header, historyList)
+        addCollapseControl(header, historyList, AppPreferences.CARD_HISTORY)
         return card
     }
 
     private fun renderHistory(force: Boolean = false) {
         val runs = WalkState.recentRuns(this)
         val signature = runs.joinToString(";") {
-            "${it.timestampMillis}|${it.durationMs}|${it.distanceMeters}|${it.steps}|${it.completed}"
+            "${it.startedAtMillis}|${it.endedAtMillis}|${it.durationMs}|" +
+                "${it.distanceMeters}|${it.steps}|${it.speedKmh}|${it.completed}"
         }
         if (!force && signature == lastHistorySignature) return
         lastHistorySignature = signature
@@ -748,28 +763,34 @@ class MainActivity : ComponentActivity() {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.START or Gravity.CENTER_VERTICAL
             }
-            if (run.completed) {
-                details.addView(TextView(this).apply {
-                    text = getString(R.string.history_completed)
-                    textSize = 11f
-                    setTextColor(palette.success)
-                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                }, matchWrap())
-            }
             details.addView(TextView(this).apply {
                 text = getString(
-                    R.string.history_metrics,
+                    R.string.history_metrics_primary,
                     distanceFormat.format(run.distanceMeters / 1_000.0),
-                    formatDuration(run.durationMs / 1_000L),
-                    integerFormat.format(run.steps)
+                    formatDuration(run.durationMs / 1_000L)
                 )
                 textSize = 11f
                 setTextColor(palette.textPrimary)
-                setPadding(0, if (run.completed) dp(2) else 0, 0, 0)
                 isSingleLine = true
                 setAutoSizeTextTypeUniformWithConfiguration(
                     9,
                     11,
+                    1,
+                    TypedValue.COMPLEX_UNIT_SP
+                )
+            }, matchWrap())
+            details.addView(TextView(this).apply {
+                text = getString(
+                    R.string.history_metrics_secondary,
+                    run.speedKmh,
+                    integerFormat.format(run.steps)
+                )
+                textSize = 10.5f
+                setTextColor(palette.textMuted)
+                isSingleLine = true
+                setAutoSizeTextTypeUniformWithConfiguration(
+                    8,
+                    10,
                     1,
                     TypedValue.COMPLEX_UNIT_SP
                 )
@@ -779,14 +800,32 @@ class MainActivity : ComponentActivity() {
                 LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             )
 
-            entry.addView(TextView(this).apply {
-                text = dateTimeFormat.format(run.timestampMillis)
-                textSize = 9.5f
+            val timestamps = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.END or Gravity.CENTER_VERTICAL
+                setPadding(dp(10), 0, 0, 0)
+            }
+            timestamps.addView(TextView(this).apply {
+                text = getString(
+                    R.string.history_started_at,
+                    dateTimeFormat.format(run.startedAtMillis)
+                )
+                textSize = 9f
                 setTextColor(palette.textMuted)
                 gravity = Gravity.END
-                setPadding(dp(12), 0, 0, 0)
                 isSingleLine = true
             })
+            timestamps.addView(TextView(this).apply {
+                text = getString(
+                    R.string.history_ended_at,
+                    dateTimeFormat.format(run.endedAtMillis)
+                )
+                textSize = 9f
+                setTextColor(palette.textMuted)
+                gravity = Gravity.END
+                isSingleLine = true
+            })
+            entry.addView(timestamps)
             historyList.addView(entry)
         }
     }
@@ -811,29 +850,26 @@ class MainActivity : ComponentActivity() {
         elevation = 0f
     }
 
-    private fun addCollapseControl(header: LinearLayout, content: View) {
-        var expanded = true
-        val toggle = Button(this).apply {
-            textSize = 11f
-            isAllCaps = false
-            minWidth = 0
-            minimumWidth = 0
-            minHeight = dp(38)
-            minimumHeight = dp(38)
-            setPadding(0, 0, 0, 0)
-            setTextColor(palette.accentStrong)
+    private fun addCollapseControl(header: LinearLayout, content: View, card: String) {
+        var expanded = AppPreferences.isCardExpanded(this, card)
+        val toggle = ImageButton(this).apply {
+            setPadding(dp(6), dp(6), dp(6), dp(6))
+            imageTintList = ColorStateList.valueOf(Color.WHITE)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
             stateListAnimator = null
             elevation = 0f
             background = statefulRoundedDrawable(
-                normalColor = palette.accentSoft,
-                pressedColor = palette.headerControlBackground,
+                normalColor = palette.primaryAction,
+                pressedColor = palette.primaryActionPressed,
                 radiusDp = 12
             )
         }
 
         fun updateCollapseState() {
             content.visibility = if (expanded) View.VISIBLE else View.GONE
-            toggle.text = if (expanded) "▲" else "▼"
+            toggle.setImageResource(
+                if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down
+            )
             toggle.contentDescription = getString(
                 if (expanded) R.string.collapse_card else R.string.expand_card
             )
@@ -841,6 +877,7 @@ class MainActivity : ComponentActivity() {
 
         toggle.setOnClickListener {
             expanded = !expanded
+            AppPreferences.setCardExpanded(this, card, expanded)
             updateCollapseState()
         }
         header.addView(
@@ -1063,6 +1100,7 @@ class MainActivity : ComponentActivity() {
 
     private fun updateSelectedConfigText() {
         selectedSpeedLabel.text = "$selectedSpeedKmh km/h"
+        currentSpeedValue.text = "$selectedSpeedKmh km/h"
         selectedDistanceLabel.text = if (selectedEndless) {
             getString(R.string.endless_value)
         } else {
@@ -1135,22 +1173,24 @@ class MainActivity : ComponentActivity() {
                 "$selectedKm km"
             }
             selectedSpeedLabel.text = "$selectedSpeedKmh km/h"
+            startedAtValue.text = formatDateTime(WalkState.startTimeMillis(this))
+            currentSpeedValue.text = "$selectedSpeedKmh km/h"
             estimatedTimeLabel.text = if (selectedEndless) {
                 getString(R.string.until_you_stop)
             } else {
                 formatEstimatedDuration(WalkState.totalDurationMs(this))
             }
-            activityState.text = getString(
-                if (selectedEndless) R.string.status_endless else R.string.status_in_progress
-            )
-            activityState.setTextColor(palette.accentStrong)
             actionButton.text = getString(R.string.cancel_activity)
-            actionButton.background = roundedDrawable(palette.danger, 16)
+            actionButton.background = statefulRoundedDrawable(
+                normalColor = palette.accent,
+                pressedColor = palette.dangerButtonPressed,
+                radiusDp = 16
+            )
             actionButton.isEnabled = true
             actionButton.isClickable = true
+            actionButton.alpha = 1f
         } else {
-            activityState.text = getString(R.string.status_ready)
-            activityState.setTextColor(palette.textMuted)
+            startedAtValue.text = getString(R.string.metric_empty)
             actionButton.background = statefulRoundedDrawable(
                 normalColor = palette.primaryAction,
                 pressedColor = palette.primaryActionPressed,
@@ -1205,6 +1245,13 @@ class MainActivity : ComponentActivity() {
             totalSeconds % 60L
         )
     }
+
+    private fun formatDateTime(timestampMillis: Long): String =
+        DateFormat.getDateTimeInstance(
+            DateFormat.SHORT,
+            DateFormat.SHORT,
+            resources.configuration.locales[0]
+        ).format(timestampMillis)
 
     private fun formatEstimatedDuration(durationMs: Long): String {
         val totalSeconds = ((durationMs + 500L) / 1_000L).coerceAtLeast(1L)
