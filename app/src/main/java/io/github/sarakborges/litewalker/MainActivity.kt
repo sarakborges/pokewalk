@@ -652,21 +652,20 @@ class MainActivity : ComponentActivity() {
                 1f
             )
         )
+        clearHistoryButton = compactButton(
+            text = getString(R.string.clear_history),
+            description = getString(R.string.clear_history_description),
+            backgroundColor = palette.accent,
+            pressedColor = palette.dangerButtonPressed,
+            onClick = ::confirmClearHistory
+        )
+        header.addView(clearHistoryButton)
         card.addView(header)
 
         historyList = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
         card.addView(historyList, matchWrap().apply { topMargin = dp(12) })
-
-        clearHistoryButton = largeActionButton(
-            text = getString(R.string.clear_history),
-            description = getString(R.string.clear_history_description),
-            normalColor = palette.accent,
-            pressedColor = palette.dangerButtonPressed,
-            onClick = ::confirmClearHistory
-        )
-        card.addView(clearHistoryButton, matchWrap().apply { topMargin = dp(14) })
         return card
     }
 

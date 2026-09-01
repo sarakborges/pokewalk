@@ -8,7 +8,7 @@ Expected certificate SHA-256 fingerprint:
 
 The private keystore must never be committed to this public repository.
 
-The GitHub Actions workflow builds a release APK without an ephemeral debug key and uploads `LiteWalker-v1.1.3-unsigned.apk` for signing outside GitHub.
+The GitHub Actions workflow builds a release APK without an ephemeral debug key and uploads `LiteWalker-v1.1.4-unsigned.apk` for signing outside GitHub.
 
 Before distributing any APK, verify that its signer certificate SHA-256 fingerprint matches the value above. Never distribute the unsigned or runner-debug-signed artifact as the installable app.
 
