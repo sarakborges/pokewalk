@@ -30,12 +30,11 @@
     <string name="cancel_activity">End workout</string>
     <string name="status_in_progress">Active</string>
     <string name="status_endless">Endless</string>
-    <string name="status_completed">Completed</string>
-    <string name="status_saved">Workout saved</string>
     <string name="status_ready">Ready</string>
 
     <string name="history_title">Recent workouts</string>
     <string name="clear_history">Clear</string>
+    <string name="clear_history_description">Clear recent workout history</string>
     <string name="history_empty">Your five most recent workouts will show up here.</string>
     <string name="history_completed">Completed</string>
     <string name="history_stopped">Saved</string>
@@ -53,6 +52,11 @@
     <string name="notifications_disabled">Turn on LiteWalker notifications in Android settings.</string>
     <string name="activity_error">Workout couldn’t be completed: %1$s</string>
 
+    <string name="changelog">Changelog</string>
+    <string name="changelog_description">Open version history</string>
+    <string name="changelog_title">What’s new</string>
+    <string name="changelog_text">v1.1.2\n• Refined Brazilian Portuguese copy\n• Hides the distance slider during endless workouts\n• Matches the launcher and header icons\n• Uses flat cards and clearer action buttons\n• Resets current workout data when it ends\n• Removes end-of-workout notifications\n\nv1.1.1\n• Introduced the purple and red visual theme\n• Added a larger header icon and two-sided toggles\n• Consolidated workout metrics into one compact card\n\nv1.1.0\n• Added endless workouts and kilometer alerts\n• Added light/dark themes, PT-BR/EN-US, and recent workout history</string>
+
     <string name="privacy">Privacy</string>
     <string name="privacy_description">Open privacy policy</string>
     <string name="privacy_title">Privacy</string>
@@ -63,17 +67,12 @@
 
     <string name="channel_active_name">Active workout</string>
     <string name="channel_active_description">Live progress while a LiteWalker workout is running</string>
-    <string name="channel_result_name">Workout results</string>
-    <string name="channel_result_description">Alerts when a workout ends</string>
     <string name="channel_milestone_name">Kilometer alerts</string>
     <string name="channel_milestone_description">Alerts after every kilometer</string>
     <string name="notification_progress">%1$s • %2$s km • %3$s steps • %4$d km/h</string>
-    <string name="notification_result">%1$s • %2$s km • %3$s steps</string>
     <plurals name="notification_kilometer_title">
         <item quantity="one">%1$d kilometer completed</item>
         <item quantity="other">%1$d kilometers completed</item>
     </plurals>
     <string name="notification_kilometer_body">%1$s • %2$s steps</string>
-    <string name="notification_completed">Workout complete</string>
-    <string name="notification_saved">Workout saved</string>
 </resources>

@@ -28,9 +28,6 @@ object WalkState {
     private const val KEY_TARGET_SPEED = "target_speed_kmh"
     private const val KEY_PREFERRED_SPEED = "preferred_speed_kmh"
     private const val KEY_STEP_PLAN = "step_plan"
-    private const val KEY_FINAL_DURATION = "final_duration"
-    private const val KEY_FINAL_DISTANCE = "final_distance"
-    private const val KEY_FINAL_STEPS = "final_steps"
     private const val KEY_NOTIFIED_KM = "notified_km"
     private const val KEY_RUN_HISTORY = "run_history"
     private const val MAX_RUN_HISTORY = 5
@@ -83,9 +80,6 @@ object WalkState {
             .putInt(KEY_TARGET_SPEED, safeSpeed)
             .putInt(KEY_PREFERRED_SPEED, safeSpeed)
             .putString(KEY_STEP_PLAN, stepPlan.joinToString(","))
-            .putLong(KEY_FINAL_DURATION, 0L)
-            .putString(KEY_FINAL_DISTANCE, "0")
-            .putLong(KEY_FINAL_STEPS, 0L)
             .putInt(KEY_NOTIFIED_KM, 0)
             .remove(KEY_ERROR)
             .apply()
@@ -311,8 +305,7 @@ object WalkState {
             durationMs = totalDurationMs(context),
             distanceMeters = targetDistanceMeters(context),
             steps = stepPlan(context).sumOf { it.toLong() },
-            finished = true,
-            stopped = false
+            finished = true
         )
     }
 
@@ -331,8 +324,7 @@ object WalkState {
                 distanceMeters.coerceIn(0.0, targetDistanceMeters(context))
             },
             steps = steps.coerceAtLeast(0L),
-            finished = false,
-            stopped = true
+            finished = false
         )
     }
 
@@ -341,19 +333,8 @@ object WalkState {
         durationMs: Long,
         distanceMeters: Double,
         steps: Long,
-        finished: Boolean,
-        stopped: Boolean
+        finished: Boolean
     ) {
-        prefs(context).edit()
-            .putBoolean(KEY_RUNNING, false)
-            .putBoolean(KEY_FINISHED, finished)
-            .putBoolean(KEY_STOPPED, stopped)
-            .putLong(KEY_FINAL_DURATION, durationMs)
-            .putString(KEY_FINAL_DISTANCE, distanceMeters.toString())
-            .putLong(KEY_FINAL_STEPS, steps)
-            .remove(KEY_ERROR)
-            .apply()
-
         if (durationMs > 0L || distanceMeters > 0.0 || steps > 0L) {
             addRunToHistory(
                 context,
@@ -366,6 +347,26 @@ object WalkState {
                 )
             )
         }
+        clearCurrentRun(context)
+    }
+
+    private fun clearCurrentRun(context: Context) {
+        prefs(context).edit()
+            .remove(KEY_RUNNING)
+            .remove(KEY_START_TIME)
+            .remove(KEY_COMPLETED_CHUNKS)
+            .remove(KEY_FINISHED)
+            .remove(KEY_STOPPED)
+            .remove(KEY_ERROR)
+            .remove(KEY_TARGET_KM)
+            .remove(KEY_ENDLESS)
+            .remove(KEY_TARGET_SPEED)
+            .remove(KEY_STEP_PLAN)
+            .remove("final_duration")
+            .remove("final_distance")
+            .remove("final_steps")
+            .remove(KEY_NOTIFIED_KM)
+            .apply()
     }
 
     fun recentRuns(context: Context): List<RunEntry> =
@@ -405,18 +406,9 @@ object WalkState {
         )
     }
 
-    fun finalMetrics(context: Context): Metrics = Metrics(
-        durationMs = prefs(context).getLong(KEY_FINAL_DURATION, 0L),
-        distanceMeters = prefs(context).getString(KEY_FINAL_DISTANCE, "0")
-            ?.toDoubleOrNull() ?: 0.0,
-        steps = prefs(context).getLong(KEY_FINAL_STEPS, 0L)
-    )
-
     fun fail(context: Context, message: String) {
+        clearCurrentRun(context)
         prefs(context).edit()
-            .putBoolean(KEY_RUNNING, false)
-            .putBoolean(KEY_FINISHED, false)
-            .putBoolean(KEY_STOPPED, false)
             .putString(KEY_ERROR, message)
             .apply()
     }
@@ -436,14 +428,6 @@ object WalkState {
 
     fun completedChunks(context: Context): Int =
         prefs(context).getInt(KEY_COMPLETED_CHUNKS, 0).coerceIn(0, chunkCount(context))
-
-    fun isFinished(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_FINISHED, false)
-
-    fun isStopped(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_STOPPED, false)
-
-    fun hasResult(context: Context): Boolean = isFinished(context) || isStopped(context)
 
     fun error(context: Context): String? = prefs(context).getString(KEY_ERROR, null)
 

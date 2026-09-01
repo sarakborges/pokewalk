@@ -3,5 +3,5 @@
     <color name="app_background_dark">#130F17</color>
     <color name="accent_red">#D33E5A</color>
     <color name="accent_red_dark">#EF4F6B</color>
-    <color name="launcher_background">#DCEEEA</color>
+    <color name="launcher_background">#D33E5A</color>
 </resources>

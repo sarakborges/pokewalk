@@ -9,6 +9,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -61,6 +62,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var distanceValue: TextView
     private lateinit var stepsValue: TextView
     private lateinit var distanceSeek: SeekBar
+    private lateinit var distanceSliderGroup: LinearLayout
     private lateinit var speedSeek: SeekBar
     private lateinit var endlessSwitch: Switch
     private lateinit var selectedDistanceLabel: TextView
@@ -68,7 +70,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var estimatedTimeLabel: TextView
     private lateinit var activityProgress: ProgressBar
     private lateinit var historyList: LinearLayout
-    private lateinit var clearHistoryButton: TextView
+    private lateinit var clearHistoryButton: Button
 
     private var selectedKm = 5
     private var selectedSpeedKmh = WalkState.DEFAULT_SPEED_KMH
@@ -193,32 +195,42 @@ class MainActivity : ComponentActivity() {
         val footer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(12), dp(16), dp(12))
+            setPadding(dp(16), dp(9), dp(16), dp(9))
             setBackgroundColor(palette.surface)
-            elevation = dp(6).toFloat()
+            elevation = 0f
         }
         footer.addView(TextView(this).apply {
             text = getString(R.string.footer_version, BuildConfig.VERSION_NAME)
             textSize = 11f
             setTextColor(palette.textMuted)
+            isSingleLine = true
         }, LinearLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             1f
         ))
-        footer.addView(TextView(this).apply {
-            text = getString(R.string.privacy)
-            textSize = 12f
-            setTextColor(palette.accentStrong)
-            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            gravity = Gravity.CENTER
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = roundedDrawable(palette.accentSoft, 999)
-            isClickable = true
-            isFocusable = true
-            contentDescription = getString(R.string.privacy_description)
-            setOnClickListener { showPrivacyPolicy() }
-        })
+        footer.addView(
+            compactButton(
+                text = getString(R.string.changelog),
+                description = getString(R.string.changelog_description),
+                onClick = ::showChangelog
+            ),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { marginEnd = dp(7) }
+        )
+        footer.addView(
+            compactButton(
+                text = getString(R.string.privacy),
+                description = getString(R.string.privacy_description),
+                onClick = ::showPrivacyPolicy
+            )
+        )
+        root.addView(
+            divider(),
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
+        )
         root.addView(
             footer,
             LinearLayout.LayoutParams(
@@ -248,26 +260,10 @@ class MainActivity : ComponentActivity() {
         val iconFrame = FrameLayout(this).apply {
             background = roundedDrawable(palette.iconBackground, 18)
         }
-        val iconShadow = ImageView(this).apply {
-            setImageResource(R.drawable.ic_launcher_foreground)
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            imageTintList = ColorStateList.valueOf(Color.BLACK)
-            alpha = 0.78f
-            scaleX = 1.58f
-            scaleY = 1.58f
-            translationX = dp(1).toFloat()
-            translationY = dp(2).toFloat()
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }
-        iconFrame.addView(
-            iconShadow,
-            FrameLayout.LayoutParams(dp(64), dp(64), Gravity.CENTER)
-        )
         val icon = ImageView(this).apply {
             setImageResource(R.drawable.ic_launcher_foreground)
             contentDescription = getString(R.string.launcher_icon_description)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
-            imageTintList = ColorStateList.valueOf(Color.WHITE)
             scaleX = 1.58f
             scaleY = 1.58f
         }
@@ -522,8 +518,12 @@ class MainActivity : ComponentActivity() {
             setPadding(0, dp(4), 0, 0)
             contentDescription = getString(R.string.distance)
         }
-        card.addView(distanceSeek, matchWrap())
-        card.addView(endpointRow(getString(R.string.distance_min), getString(R.string.distance_max)))
+        distanceSliderGroup = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(distanceSeek, matchWrap())
+            addView(endpointRow(getString(R.string.distance_min), getString(R.string.distance_max)))
+        }
+        card.addView(distanceSliderGroup, matchWrap())
 
         distanceSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
@@ -658,18 +658,15 @@ class MainActivity : ComponentActivity() {
                 1f
             )
         )
-        clearHistoryButton = TextView(this).apply {
-            text = getString(R.string.clear_history)
-            textSize = 12f
-            setTextColor(palette.danger)
-            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            gravity = Gravity.CENTER
-            setPadding(dp(12), dp(7), dp(12), dp(7))
-            background = roundedDrawable(palette.dangerSoft, 999)
-            isClickable = true
-            isFocusable = true
-            setOnClickListener { confirmClearHistory() }
-        }
+        clearHistoryButton = compactButton(
+            text = getString(R.string.clear_history),
+            description = getString(R.string.clear_history_description),
+            backgroundColor = palette.dangerSoft,
+            pressedColor = palette.dangerButtonPressed,
+            textColor = palette.danger,
+            strokeColor = palette.danger,
+            onClick = ::confirmClearHistory
+        )
         header.addView(clearHistoryButton)
         card.addView(header)
 
@@ -784,7 +781,39 @@ class MainActivity : ComponentActivity() {
         orientation = LinearLayout.VERTICAL
         setPadding(dp(20), dp(20), dp(20), dp(20))
         background = roundedDrawable(palette.surface, 20, palette.border)
-        elevation = dp(2).toFloat()
+        elevation = 0f
+    }
+
+    private fun compactButton(
+        text: String,
+        description: String,
+        backgroundColor: Int = palette.primaryAction,
+        pressedColor: Int = palette.primaryActionPressed,
+        textColor: Int = Color.WHITE,
+        strokeColor: Int? = null,
+        onClick: () -> Unit
+    ) = Button(this).apply {
+        this.text = text
+        contentDescription = description
+        textSize = 11.5f
+        isAllCaps = false
+        isSingleLine = true
+        minWidth = 0
+        minimumWidth = 0
+        minHeight = dp(38)
+        minimumHeight = dp(38)
+        setPadding(dp(12), 0, dp(12), 0)
+        setTextColor(textColor)
+        typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        stateListAnimator = null
+        elevation = 0f
+        background = statefulRoundedDrawable(
+            normalColor = backgroundColor,
+            pressedColor = pressedColor,
+            radiusDp = 12,
+            strokeColor = strokeColor
+        )
+        setOnClickListener { onClick() }
     }
 
     private fun sectionTitle(text: String) = TextView(this).apply {
@@ -921,6 +950,22 @@ class MainActivity : ComponentActivity() {
         strokeColor?.let { setStroke(dp(1), it) }
     }
 
+    private fun statefulRoundedDrawable(
+        normalColor: Int,
+        pressedColor: Int,
+        radiusDp: Int,
+        strokeColor: Int? = null
+    ) = StateListDrawable().apply {
+        addState(
+            intArrayOf(android.R.attr.state_pressed),
+            roundedDrawable(pressedColor, radiusDp, strokeColor)
+        )
+        addState(
+            intArrayOf(),
+            roundedDrawable(normalColor, radiusDp, strokeColor)
+        )
+    }
+
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     private fun updateSelectedConfigText() {
@@ -936,7 +981,8 @@ class MainActivity : ComponentActivity() {
             formatEstimatedDuration(WalkState.calculateDurationMs(selectedKm, selectedSpeedKmh))
         }
         val running = WalkState.isRunning(this)
-        distanceSeek.isEnabled = !running && !selectedEndless
+        distanceSliderGroup.visibility = if (selectedEndless) View.GONE else View.VISIBLE
+        distanceSeek.isEnabled = !running
         distanceSeek.alpha = if (distanceSeek.isEnabled) 1f else 0.45f
         if (!WalkState.isRunning(this)) {
             actionButton.text = if (selectedEndless) {
@@ -966,14 +1012,14 @@ class MainActivity : ComponentActivity() {
 
     private fun render() {
         val running = WalkState.isRunning(this)
-        val metrics = when {
-            running -> WalkState.metricsAt(
+        val metrics = if (running) {
+            WalkState.metricsAt(
                 this,
                 (System.currentTimeMillis() - WalkState.startTimeMillis(this))
                     .coerceIn(0L, WalkState.totalDurationMs(this))
             )
-            WalkState.hasResult(this) -> WalkState.finalMetrics(this)
-            else -> WalkState.Metrics(0L, 0.0, 0L)
+        } else {
+            WalkState.Metrics(0L, 0.0, 0L)
         }
 
         elapsedValue.text = formatDuration(metrics.durationMs / 1_000L)
@@ -1008,19 +1054,18 @@ class MainActivity : ComponentActivity() {
             actionButton.text = getString(R.string.cancel_activity)
             actionButton.background = roundedDrawable(palette.danger, 16)
         } else {
-            activityState.text = when {
-                WalkState.isFinished(this) -> getString(R.string.status_completed)
-                WalkState.isStopped(this) -> getString(R.string.status_saved)
-                else -> getString(R.string.status_ready)
-            }
-            activityState.setTextColor(
-                if (WalkState.isFinished(this)) palette.success else palette.textMuted
+            activityState.text = getString(R.string.status_ready)
+            activityState.setTextColor(palette.textMuted)
+            actionButton.background = statefulRoundedDrawable(
+                normalColor = palette.primaryAction,
+                pressedColor = palette.primaryActionPressed,
+                radiusDp = 16
             )
-            actionButton.background = roundedDrawable(palette.accent, 16)
             updateSelectedConfigText()
         }
 
-        distanceSeek.isEnabled = !running && !selectedEndless
+        distanceSliderGroup.visibility = if (selectedEndless) View.GONE else View.VISIBLE
+        distanceSeek.isEnabled = !running
         distanceSeek.alpha = if (distanceSeek.isEnabled) 1f else 0.45f
         speedSeek.isEnabled = !running
         endlessSwitch.isEnabled = !running
@@ -1143,6 +1188,14 @@ class MainActivity : ComponentActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
+    private fun showChangelog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.changelog_title)
+            .setMessage(R.string.changelog_text)
+            .setPositiveButton(R.string.close, null)
+            .show()
+    }
+
     private fun showPrivacyPolicy() {
         AlertDialog.Builder(this)
             .setTitle(R.string.privacy_title)
@@ -1176,7 +1229,10 @@ class MainActivity : ComponentActivity() {
         val divider: Int,
         val danger: Int,
         val dangerSoft: Int,
+        val dangerButtonPressed: Int,
         val success: Int,
+        val primaryAction: Int,
+        val primaryActionPressed: Int,
         val headerTextPrimary: Int,
         val headerTextMuted: Int,
         val headerControlBackground: Int,
@@ -1200,7 +1256,10 @@ class MainActivity : ComponentActivity() {
                     divider = Color.rgb(60, 46, 68),
                     danger = Color.rgb(255, 117, 142),
                     dangerSoft = Color.rgb(74, 38, 49),
+                    dangerButtonPressed = Color.rgb(93, 44, 56),
                     success = Color.rgb(217, 182, 239),
+                    primaryAction = Color.rgb(122, 77, 160),
+                    primaryActionPressed = Color.rgb(99, 58, 133),
                     headerTextPrimary = Color.WHITE,
                     headerTextMuted = Color.rgb(229, 215, 237),
                     headerControlBackground = Color.rgb(93, 48, 120),
@@ -1223,7 +1282,10 @@ class MainActivity : ComponentActivity() {
                     divider = Color.rgb(236, 228, 240),
                     danger = Color.rgb(181, 47, 73),
                     dangerSoft = Color.rgb(249, 231, 236),
+                    dangerButtonPressed = Color.rgb(243, 206, 216),
                     success = Color.rgb(111, 58, 145),
+                    primaryAction = Color.rgb(111, 58, 145),
+                    primaryActionPressed = Color.rgb(87, 38, 111),
                     headerTextPrimary = Color.WHITE,
                     headerTextMuted = Color.rgb(228, 211, 236),
                     headerControlBackground = Color.rgb(99, 53, 129),
